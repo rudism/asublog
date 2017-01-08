@@ -4,7 +4,10 @@ namespace Asublog.Plugins
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using Amazon;
+    using Amazon.CloudFront;
+    using Amazon.CloudFront.Model;
     using Amazon.S3;
     using Amazon.S3.Model;
     using HandlebarsDotNet;
@@ -24,17 +27,33 @@ namespace Asublog.Plugins
             var index = Config["index"];
             _postsPerPage = int.Parse(Config["postsPerPage"]);
 
-            if(!index.StartsWith("/")) index = Path.Combine(_basePath, index);
-            if(!File.Exists(index)) throw new FileNotFoundException("Could not find index template", index);
-            _index = Handlebars.Compile(File.ReadAllText(index));
+            if(index != null)
+            {
+                if(!index.StartsWith("/")) index = Path.Combine(_basePath, index);
+                if(!File.Exists(index)) throw new FileNotFoundException("Could not find index template", index);
+                _index = Handlebars.Compile(File.ReadAllText(index));
+            }
 
-            _client = new AmazonS3Client(Config["awsKey"], Config["awsSecret"], RegionEndpoint.GetBySystemName(Config["awsRegion"]));
+            _client = new AmazonS3Client(Config["awsKey"], Config["awsSecret"],
+                RegionEndpoint.GetBySystemName(Config["awsRegion"]));
         }
 
-        private void SaveIndex(Post[] posts, int pageNum)
+        private void SaveIndex(Post[] posts, int pageNum, int maxPage)
         {
             var fname = string.Format("index{0}.html", pageNum > 0 ? pageNum.ToString() : null);
-            var content = _index(new {posts});
+
+            var content = _index(new
+            {
+                posts,
+                page = new
+                {
+                    num = pageNum,
+                    max = maxPage,
+                    isFirst = pageNum == 0,
+                    isLast = pageNum == maxPage
+                }
+            });
+
             Log.Debug(string.Format("Rendered file {0}", fname), content);
 
             var putReq = new PutObjectRequest
@@ -44,12 +63,20 @@ namespace Asublog.Plugins
                 ContentBody = content
             };
 
-            Log.Info(string.Format("Uploading s3://{0}/{1}", Config["bucket"], fname));
-            _client.PutObject(putReq);
+            var resp = _client.PutObject(putReq);
+            if(resp.HttpStatusCode == HttpStatusCode.OK)
+            {
+                Log.Info(string.Format("Uploaded s3://{0}/{1}", Config["bucket"], fname));
+            }
+            else
+            {
+                Log.Error(string.Format("Got unexpected result when uploading s3://{0}/{1}: {2}", Config["bucket"], fname, resp.HttpStatusCode));
+            }
         }
 
-        public override void Publish(IEnumerator<Post> posts)
+        public override void Publish(IEnumerator<Post> posts, int count)
         {
+            var maxPage = (int) Math.Ceiling((float) count / _postsPerPage) - 1;
             var page = 0;
             var pagePosts = new List<Post>();
             while(posts.MoveNext())
@@ -57,13 +84,40 @@ namespace Asublog.Plugins
                 pagePosts.Add(posts.Current);
                 if(pagePosts.Count == _postsPerPage)
                 {
-                    SaveIndex(pagePosts.ToArray(), page++);
+                    SaveIndex(pagePosts.ToArray(), page++, maxPage);
                     pagePosts.Clear();
                 }
             }
             if(pagePosts.Count > 0)
             {
-                SaveIndex(pagePosts.ToArray(), page);
+                SaveIndex(pagePosts.ToArray(), page, maxPage);
+            }
+
+            var distId = Config["cloudfrontDistId"];
+            if(distId != null)
+            {
+                var client = new AmazonCloudFrontClient(Config["awsKey"], Config["awsSecret"],
+                    RegionEndpoint.GetBySystemName(Config["awsRegion"]));
+
+                var invReq = new CreateInvalidationRequest
+                {
+                    DistributionId = distId,
+                    InvalidationBatch = new InvalidationBatch
+                    {
+                        Paths = new Paths { Quantity = 1, Items = new List<string> {"/*"} },
+                        CallerReference = DateTime.Now.Ticks.ToString()
+                    }
+                };
+
+                var resp = client.CreateInvalidation(invReq);
+                if(resp.HttpStatusCode == HttpStatusCode.Created)
+                {
+                    Log.Info(string.Format("Created invalidation for Cloudfront Distribution {0}", distId));
+                }
+                else
+                {
+                    Log.Error(string.Format("Got unexpected result creating invalidation for Cloudfront Distribution {0}: {1}", distId, resp.HttpStatusCode));
+                }
             }
         }
     }

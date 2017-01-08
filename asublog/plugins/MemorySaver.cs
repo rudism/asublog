@@ -20,6 +20,11 @@ namespace Asublog.Plugins
             _posts.Add(post);
         }
 
+        public override int PostCount
+        {
+            get { return _posts.Count; }
+        }
+
         public override PostEnumerator GetPosts()
         {
             return App.Wrap(_posts.OrderByDescending(p => p.Created).GetEnumerator());

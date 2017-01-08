@@ -11,7 +11,7 @@ namespace Asublog.Plugins
     {
         public ConsolePublisher() : base("consolePublisher", "1.0") { }
 
-        public override void Publish(IEnumerator<Post> posts)
+        public override void Publish(IEnumerator<Post> posts, int count)
         {
             Post latest = null;
             while(posts.MoveNext())

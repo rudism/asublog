@@ -87,6 +87,11 @@ namespace Asublog.Plugins
             _db.Insert(DbPost.FromPost(post));
         }
 
+        public override int PostCount
+        {
+            get { return _db.Table<DbPost>().Count(); }
+        }
+
         public override PostEnumerator GetPosts()
         {
             return App.Wrap(new ConvertedPostEnumerator(_db.Table<DbPost>().OrderByDescending(p => p.Created).GetEnumerator()));
@@ -102,9 +107,10 @@ namespace Asublog.Plugins
                     Plugin = plugin,
                     Key = key,
                 };
+                _db.Insert(entry);
             }
             entry.Value = val;
-            _db.InsertOrReplace(entry);
+            _db.Update(entry);
         }
 
         public override string CacheGet(string plugin, string key)

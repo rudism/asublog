@@ -43,6 +43,7 @@ namespace Asublog.Plugins
         public abstract void Save(Post post);
         public virtual void Flush() { }
         public abstract PostEnumerator GetPosts();
+        public abstract int PostCount { get; }
         public abstract void CacheSet(string plugin, string key, string val);
         public abstract string CacheGet(string plugin, string key);
     }
@@ -50,7 +51,7 @@ namespace Asublog.Plugins
     public abstract class PublishingPlugin : Plugin
     {
         protected PublishingPlugin(string name, string version) : base(name, version) { }
-        public abstract void Publish(IEnumerator<Post> posts);
+        public abstract void Publish(IEnumerator<Post> posts, int count);
     }
 
     public abstract class LoggingPlugin : Plugin

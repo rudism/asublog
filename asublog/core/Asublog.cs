@@ -91,7 +91,14 @@ namespace Asublog.Core
                 }
             }
 
-            Log.Debug("Loaded plugins", new {posters = _postingPlugins.Select(p => p.Name).ToArray(), publishers = _publishingPlugins.Select(p => p.Name).ToArray(), processors = _processingPlugins.Select(p => p.Name).ToArray(), saver = _savingPlugin.Name, loggers = _loggingPlugins.Select(p => p.Name).ToArray()});
+            Log.Debug("Loaded plugins", new
+            {
+                posters = _postingPlugins.Select(p => p.Name).ToArray(),
+                publishers = _publishingPlugins.Select(p => p.Name).ToArray(),
+                processors = _processingPlugins.Select(p => p.Name).ToArray(),
+                saver = _savingPlugin.Name,
+                loggers = _loggingPlugins.Select(p => p.Name).ToArray()
+            });
         }
 
         public void ReceivePost(Post post)
@@ -103,6 +110,7 @@ namespace Asublog.Core
         {
             foreach(var post in posts)
             {
+                Log.Info(string.Format("Received new post {0}", post.Id));
                 try
                 {
                     _savingPlugin.Save(post);
@@ -124,7 +132,7 @@ namespace Asublog.Core
             {
                 try
                 {
-                    plugin.Publish(_savingPlugin.GetPosts());
+                    plugin.Publish(_savingPlugin.GetPosts(), _savingPlugin.PostCount);
                 }
                 catch(Exception ex)
                 {

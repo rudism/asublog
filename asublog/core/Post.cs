@@ -33,6 +33,7 @@ namespace Asublog.Core
             _attachments.Add(new Attachment
             {
                 Type = type,
+                Url = url,
                 Content = content
             });
         }
