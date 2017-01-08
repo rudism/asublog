@@ -1,4 +1,5 @@
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -35,9 +36,6 @@
     <Reference Include="YamlDotNet">
       <HintPath>..\packages\YamlDotNet.4.0.1-pre309\lib\dotnet\YamlDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="BouncyCastle">
-      <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
-    </Reference>
     <Reference Include="ARSoft.Tools.Net">
       <HintPath>..\packages\ARSoft.Tools.Net.1.8.2\lib\net35\ARSoft.Tools.Net.dll</HintPath>
     </Reference>
@@ -47,8 +45,17 @@
     <Reference Include="DynamicExpresso.Core">
       <HintPath>..\packages\DynamicExpresso.Core.1.3.3.5\lib\net40\DynamicExpresso.Core.dll</HintPath>
     </Reference>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="AWSSDK.S3">
+      <HintPath>..\packages\AWSSDK.S3.3.3.5.2\lib\net45\AWSSDK.S3.dll</HintPath>
+    </Reference>
+    <Reference Include="AWSSDK.Core">
+      <HintPath>..\packages\AWSSDK.Core.3.3.7.1\lib\net45\AWSSDK.Core.dll</HintPath>
+    </Reference>
     <Reference Include="FeintTemplateEngine">
-      <HintPath>packages\feint-template-engine.0.4.1\lib\net45\FeintTemplateEngine.dll</HintPath>
+      <HintPath>..\packages\feint-template-engine.0.4.1\lib\net45\FeintTemplateEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -67,12 +74,13 @@
     <Compile Include="plugins\ConsolePublisher.cs" />
     <Compile Include="plugins\SqliteSaver.cs" />
     <Compile Include="plugins\lib\SQLite.cs" />
-    <Compile Include="plugins\JadeS3Publisher.cs" />
+    <Compile Include="plugins\FeintS3Publisher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
