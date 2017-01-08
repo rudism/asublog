@@ -1,6 +1,7 @@
 namespace Asublog.Plugins
 {
     using System;
+    using System.Collections.Generic;
     using Core;
 
     public abstract class Plugin
@@ -38,7 +39,14 @@ namespace Asublog.Plugins
     {
         protected SavingPlugin(string name, string version) : base(name, version) { }
         public abstract void Save(Post post);
-        public abstract void Flush();
+        public virtual void Flush() { }
+        public abstract IEnumerator<Post> GetPosts();
+    }
+
+    public abstract class PublishingPlugin : Plugin
+    {
+        protected PublishingPlugin(string name, string version) : base(name, version) { }
+        public abstract void Publish(IEnumerator<Post> posts);
     }
 
     public abstract class LoggingPlugin : Plugin

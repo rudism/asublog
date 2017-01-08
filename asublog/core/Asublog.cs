@@ -19,7 +19,9 @@ namespace Asublog.Core
     {
         private LoggingPlugin[] _loggingPlugins;
         private PostingPlugin[] _postingPlugins;
-        private SavingPlugin[] _savingPlugins;
+        private PublishingPlugin[] _publishingPlugins;
+
+        private SavingPlugin _savingPlugin;
 
         private Dictionary<Guid, Timer> _timers;
 
@@ -43,7 +45,14 @@ namespace Asublog.Core
             var loader = new PluginLoader(config, Log, this);
             _loggingPlugins = loader.GetPlugins<LoggingPlugin>();
             _postingPlugins = loader.GetPlugins<PostingPlugin>();
-            _savingPlugins = loader.GetPlugins<SavingPlugin>();
+            _publishingPlugins = loader.GetPlugins<PublishingPlugin>();
+
+            var saving = loader.GetPlugins<SavingPlugin>();
+            if(saving.Length != 1)
+            {
+                throw new Exception("Must specify exactly one SavingPlugin");
+            }
+            _savingPlugin = saving.Single();
 
             // replace temporary console logger with actual logging plugins
             Log.Loggers = _loggingPlugins;
@@ -80,33 +89,34 @@ namespace Asublog.Core
 
         public void ReceivePosts(IEnumerable<Post> posts)
         {
-            foreach(var plugin in _savingPlugins)
+            foreach(var post in posts)
             {
-                foreach(var post in posts)
-                {
-                    try
-                    {
-                        plugin.Save(post);
-                    }
-                    catch(Exception ex)
-                    {
-                        Log.Error("Error while saving post in plugin {0}", ex);
-                    }
-                }
                 try
                 {
-                    plugin.Flush();
+                    _savingPlugin.Save(post);
                 }
                 catch(Exception ex)
                 {
-                    Log.Error("Error while flushing plugin {0}", ex);
+                    Log.Error("Error while saving post in plugin {0}", ex);
                 }
+            }
+            try
+            {
+                _savingPlugin.Flush();
+            }
+            catch(Exception ex)
+            {
+                Log.Error("Error while flushing plugin {0}", ex);
+            }
+            foreach(var plugin in _publishingPlugins)
+            {
+                plugin.Publish(_savingPlugin.GetPosts());
             }
         }
 
         public void Dispose()
         {
-            foreach(Plugin plugin in _postingPlugins.Cast<Plugin>().Union(_savingPlugins).Union(_loggingPlugins))
+            foreach(Plugin plugin in _postingPlugins.Cast<Plugin>().Union(new[] {_savingPlugin}).Union(_loggingPlugins).Union(_publishingPlugins))
             {
                 plugin.Dispose();
             }

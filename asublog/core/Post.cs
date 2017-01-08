@@ -4,8 +4,8 @@ namespace Asublog.Core
 
     public class Post
     {
-        public Guid Id { get; private set; }
-        public DateTime Created { get; private set; }
+        public Guid Id { get; set; }
+        public DateTime Created { get; set; }
         public string Content { get; set; }
 
         public Post()
