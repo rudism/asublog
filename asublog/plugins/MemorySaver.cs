@@ -1,6 +1,7 @@
 namespace Asublog.Plugins
 {
     using System.Collections.Generic;
+    using System.Linq;
     using Core;
 
     public class MemorySaver : SavingPlugin
@@ -15,12 +16,11 @@ namespace Asublog.Plugins
         public override void Save(Post post)
         {
             _posts.Add(post);
-
         }
 
         public override IEnumerator<Post> GetPosts()
         {
-            return _posts.GetEnumerator();
+            return _posts.OrderByDescending(p => p.Created).GetEnumerator();
         }
     }
 }
