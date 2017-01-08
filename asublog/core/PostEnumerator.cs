@@ -7,7 +7,6 @@ namespace Asublog.Core
 
     public class PostEnumerator : IEnumerator<Post>
     {
-        public IAsublog App { get; set; }
         public ILogger Log { get; set; }
         public IEnumerator<Post> Posts { get; set; }
         public IEnumerable<ProcessingPlugin> ProcessingPlugins { get; set; }
@@ -16,27 +15,24 @@ namespace Asublog.Core
         {
             get
             {
-                lock(App.TimerLock)
+                var current = Posts.Current;
+                if(!current.Processed)
                 {
-                    var current = Posts.Current;
-                    if(!current.Processed)
+                    Log.Debug(string.Format("Processing post {0}", current.Id));
+                    foreach(var plugin in ProcessingPlugins)
                     {
-                        Log.Debug(string.Format("Processing post {0}", current.Id));
-                        foreach(var plugin in ProcessingPlugins)
+                        try
                         {
-                            try
-                            {
-                                plugin.Process(current);
-                            }
-                            catch(Exception ex)
-                            {
-                                Log.Error(string.Format("Error while processing with plugin {0}", plugin.Name), ex);
-                            }
+                            plugin.Process(current);
                         }
-                        current.Processed = true;
+                        catch(Exception ex)
+                        {
+                            Log.Error(string.Format("Error while processing with plugin {0}", plugin.Name), ex);
+                        }
                     }
-                    return current;
+                    current.Processed = true;
                 }
+                return current;
             }
         }
 

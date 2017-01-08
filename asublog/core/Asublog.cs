@@ -2,6 +2,7 @@ namespace Asublog.Core
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -11,9 +12,10 @@ namespace Asublog.Core
     public interface IAsublog
     {
         ILogger Log { get; set; }
-        object TimerLock { get; }
         void ReceivePost(Post post);
         PostEnumerator Wrap(IEnumerator<Post> posts);
+        void CacheSet(string key, string val);
+        string CacheGet(string key);
         void Dispose();
     }
 
@@ -28,7 +30,6 @@ namespace Asublog.Core
 
         private Dictionary<Guid, Timer> _timers;
         private static readonly object _timerLock = new object();
-        public object TimerLock { get { return _timerLock; } }
 
         public ILogger Log { get; set; }
 
@@ -72,7 +73,7 @@ namespace Asublog.Core
                 {
                     var timer = new Timer((s) =>
                     {
-                        lock(TimerLock)
+                        lock(_timerLock)
                         {
                             try
                             {
@@ -90,7 +91,7 @@ namespace Asublog.Core
                 }
             }
 
-            Log.Debug("Loaded plugins", new {_postingPlugins, _publishingPlugins, _processingPlugins, _savingPlugin, _loggingPlugins});
+            Log.Debug("Loaded plugins", new {posters = _postingPlugins.Select(p => p.Name).ToArray(), publishers = _publishingPlugins.Select(p => p.Name).ToArray(), processors = _processingPlugins.Select(p => p.Name).ToArray(), saver = _savingPlugin.Name, loggers = _loggingPlugins.Select(p => p.Name).ToArray()});
         }
 
         public void ReceivePost(Post post)
@@ -100,37 +101,34 @@ namespace Asublog.Core
 
         public void ReceivePosts(IEnumerable<Post> posts)
         {
-            lock(TimerLock)
+            foreach(var post in posts)
             {
-                foreach(var post in posts)
-                {
-                    try
-                    {
-                        _savingPlugin.Save(post);
-                    }
-                    catch(Exception ex)
-                    {
-                        Log.Error(string.Format("Error while saving post in plugin {0}", _savingPlugin.Name), ex);
-                    }
-                }
                 try
                 {
-                    _savingPlugin.Flush();
+                    _savingPlugin.Save(post);
                 }
                 catch(Exception ex)
                 {
-                    Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
+                    Log.Error(string.Format("Error while saving post in plugin {0}", _savingPlugin.Name), ex);
                 }
-                foreach(var plugin in _publishingPlugins)
+            }
+            try
+            {
+                _savingPlugin.Flush();
+            }
+            catch(Exception ex)
+            {
+                Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
+            }
+            foreach(var plugin in _publishingPlugins)
+            {
+                try
                 {
-                    try
-                    {
-                        plugin.Publish(_savingPlugin.GetPosts());
-                    }
-                    catch(Exception ex)
-                    {
-                        Log.Error(string.Format("Error while publishing via plugin {0}", plugin.Name), ex);
-                    }
+                    plugin.Publish(_savingPlugin.GetPosts());
+                }
+                catch(Exception ex)
+                {
+                    Log.Error(string.Format("Error while publishing via plugin {0}", plugin.Name), ex);
                 }
             }
         }
@@ -139,11 +137,25 @@ namespace Asublog.Core
         {
             return new PostEnumerator
             {
-                App = this,
                 Log = Log,
                 Posts = posts,
                 ProcessingPlugins = _processingPlugins
             };
+        }
+
+        public void CacheSet(string key, string val)
+        {
+            var st = new StackTrace();
+            var plugin = st.GetFrame(1).GetMethod().DeclaringType.Name;
+            Log.Debug(string.Format("Plugin {0} saving cache {1} = {2}", plugin, key, val));
+            _savingPlugin.CacheSet(plugin, key, val);
+        }
+
+        public string CacheGet(string key)
+        {
+            var st = new StackTrace();
+            var plugin = st.GetFrame(1).GetMethod().DeclaringType.Name;
+            return _savingPlugin.CacheGet(plugin, key);
         }
 
         public void Dispose()

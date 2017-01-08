@@ -43,6 +43,8 @@ namespace Asublog.Plugins
         public abstract void Save(Post post);
         public virtual void Flush() { }
         public abstract PostEnumerator GetPosts();
+        public abstract void CacheSet(string plugin, string key, string val);
+        public abstract string CacheGet(string plugin, string key);
     }
 
     public abstract class PublishingPlugin : Plugin

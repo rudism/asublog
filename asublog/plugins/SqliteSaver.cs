@@ -35,6 +35,15 @@ namespace Asublog.Plugins
         }
     }
 
+    class CacheEntry
+    {
+        [PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
+        public string Plugin { get; set; }
+        public string Key { get; set; }
+        public string Value { get; set; }
+    }
+
     class ConvertedPostEnumerator : IEnumerator<Post>
     {
         private IEnumerator<DbPost> _posts;
@@ -65,6 +74,7 @@ namespace Asublog.Plugins
             {
                 Log.Info(string.Format("Initializing new post database at {0}", dbfile));
                 _db.CreateTable<DbPost>();
+                _db.CreateTable<CacheEntry>();
             }
             else
             {
@@ -80,6 +90,27 @@ namespace Asublog.Plugins
         public override PostEnumerator GetPosts()
         {
             return App.Wrap(new ConvertedPostEnumerator(_db.Table<DbPost>().OrderByDescending(p => p.Created).GetEnumerator()));
+        }
+
+        public override void CacheSet(string plugin, string key, string val)
+        {
+            var entry = _db.Table<CacheEntry>().Where(e => e.Plugin == plugin && e.Key == key).FirstOrDefault();
+            if(entry == null)
+            {
+                entry = new CacheEntry
+                {
+                    Plugin = plugin,
+                    Key = key,
+                };
+            }
+            entry.Value = val;
+            _db.InsertOrReplace(entry);
+        }
+
+        public override string CacheGet(string plugin, string key)
+        {
+            var entry = _db.Table<CacheEntry>().Where(e => e.Plugin == plugin && e.Key == key).FirstOrDefault();
+            return entry != null ? entry.Value : null;
         }
 
         public override void Dispose()

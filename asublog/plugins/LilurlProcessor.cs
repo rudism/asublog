@@ -1,5 +1,6 @@
 namespace Asublog.Plugins
 {
+    using System.Collections.Generic;
     using System.IO;
     using System.Net;
     using System.Text;
@@ -37,45 +38,54 @@ namespace Asublog.Plugins
                 {
                     url = string.Format("http://{0}", url);
                 }
-                var req = (HttpWebRequest) WebRequest.Create(Config["url"]);
-                req.AllowWriteStreamBuffering = false;
-                req.Method = "POST";
-                req.ContentType = "application/x-www-form-urlencoded";
-                var data = HttpUtility.ParseQueryString(string.Empty);
-                data.Add("longurl", url);
-                var postData = Encoding.UTF8.GetBytes(data.ToString());
-                req.ContentLength = postData.Length;
-                using(var stream = req.GetRequestStream())
+
+                var newurl = App.CacheGet(url);
+                if(string.IsNullOrEmpty(newurl))
                 {
-                    stream.Write(postData, 0, postData.Length);
-                    stream.Flush();
-                    stream.Close();
-                }
-                Log.Debug(string.Format("Getting lilUrl for {0}", url));
-                using(var resp = (HttpWebResponse) req.GetResponse())
-                {
-                    var sr = new StreamReader(resp.GetResponseStream());
-                    var content = sr.ReadToEnd();
-                    var lilmatch = _lilok.Match(content);
-                    if(lilmatch.Success)
+                    var req = (HttpWebRequest) WebRequest.Create(Config["url"]);
+                    req.AllowWriteStreamBuffering = false;
+                    req.Method = "POST";
+                    req.ContentType = "application/x-www-form-urlencoded";
+                    var data = HttpUtility.ParseQueryString(string.Empty);
+                    data.Add("longurl", url);
+                    var postData = Encoding.UTF8.GetBytes(data.ToString());
+                    req.ContentLength = postData.Length;
+                    using(var stream = req.GetRequestStream())
                     {
-                        var newUrl = lilmatch.Groups["lilurl"].Value;
-                        Log.Debug(string.Format("Got new lilurl {0}", newUrl));
-                        post.Content = post.Content.Replace(match.Value, newUrl);
+                        stream.Write(postData, 0, postData.Length);
+                        stream.Flush();
+                        stream.Close();
                     }
-                    else
+                    Log.Debug(string.Format("Getting lilUrl for {0}", url));
+                    using(var resp = (HttpWebResponse) req.GetResponse())
                     {
-                        lilmatch = _lilerr.Match(content);
+                        var sr = new StreamReader(resp.GetResponseStream());
+                        var content = sr.ReadToEnd();
+                        var lilmatch = _lilok.Match(content);
                         if(lilmatch.Success)
                         {
-                            var msg = lilmatch.Groups["msg"].Value;
-                            Log.Error(string.Format("Lilurl error for {0}: {1}", url, msg));
+                            newurl = lilmatch.Groups["lilurl"].Value;
+                            App.CacheSet(url, newurl);
+                            Log.Debug(string.Format("Got new lilurl {0}", newurl));
                         }
                         else
                         {
-                            Log.Error(string.Format("Unexpected lilurl response for {0}: {1}", url, resp.StatusCode));
+                            lilmatch = _lilerr.Match(content);
+                            if(lilmatch.Success)
+                            {
+                                var msg = lilmatch.Groups["msg"].Value;
+                                Log.Error(string.Format("Lilurl error for {0}: {1}", url, msg));
+                            }
+                            else
+                            {
+                                Log.Error(string.Format("Unexpected lilurl response for {0}: {1}", url, resp.StatusCode));
+                            }
                         }
                     }
+                }
+                if(!string.IsNullOrEmpty(newurl))
+                {
+                    post.Content = post.Content.Replace(match.Value, newurl);
                 }
             }
         }
