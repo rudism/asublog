@@ -2,13 +2,26 @@ plugins:
   - consoleLogger
   - xmppPoster
   - pinboardPoster
-  - consoleSaver
+  - sqliteSaver
+  - consolePublisher
+  - handlebarsS3Publisher
 
 xmppPosterConfig:
-  host: my-xmpp-server.com
-  jid: mybot@my-xmpp-server.com
-  password: my-super-secret-password
-  authorized: me@my-xmpp-server.com
+  host: myxmppserver.com
+  jid: blogbot@myxmppserver.com
+  password: my-awesome-password
+  authorized: me@myxmppserver.com
 
 pinboardPosterConfig:
   interval: 300
+
+sqliteSaverConfig:
+  db: /tmp/posts.db
+
+handlebarsS3PublisherConfig:
+  postsPerPage: 50
+  index: index.html
+  bucket: mysweetmicroblog.com
+  awsKey: MYACCESSKEYID
+  awsSecret: MYSECRETACCESSKEY
+  awsRegion: us-east-1

@@ -50,6 +50,7 @@ namespace Asublog.Core
                     plugin.Log = log;
                     plugin.Config = new Configuration(plugDict);
 
+                    log.Info(string.Format("Initializing plugin {0} v{1}", plugin.Name, plugin.Version));
                     plugin.Init();
 
                     _plugins.Add(plugin);

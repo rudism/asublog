@@ -19,11 +19,7 @@ namespace Asublog.Plugins
             Version = version;
         }
 
-        public virtual void Init()
-        {
-            Log.Info(string.Format("Initializing plugin {0} v{1}",
-                Name, Version));
-        }
+        public virtual void Init() { }
 
         public virtual void Dispose() { }
     }

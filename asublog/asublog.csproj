@@ -42,9 +42,6 @@
     <Reference Include="Sharp.Xmpp">
       <HintPath>..\packages\Sharp.Xmpp.1.0.2.2\lib\net45\Sharp.Xmpp.dll</HintPath>
     </Reference>
-    <Reference Include="DynamicExpresso.Core">
-      <HintPath>..\packages\DynamicExpresso.Core.1.3.3.5\lib\net40\DynamicExpresso.Core.dll</HintPath>
-    </Reference>
     <Reference Include="BouncyCastle.Crypto">
       <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
@@ -54,8 +51,8 @@
     <Reference Include="AWSSDK.Core">
       <HintPath>..\packages\AWSSDK.Core.3.3.7.1\lib\net45\AWSSDK.Core.dll</HintPath>
     </Reference>
-    <Reference Include="FeintTemplateEngine">
-      <HintPath>..\packages\feint-template-engine.0.4.1\lib\net45\FeintTemplateEngine.dll</HintPath>
+    <Reference Include="Handlebars">
+      <HintPath>..\packages\Handlebars.Net.1.8.0\lib\portable-net45+sl5+wp8+win8\Handlebars.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -74,10 +71,13 @@
     <Compile Include="plugins\ConsolePublisher.cs" />
     <Compile Include="plugins\SqliteSaver.cs" />
     <Compile Include="plugins\lib\SQLite.cs" />
-    <Compile Include="plugins\FeintS3Publisher.cs" />
+    <Compile Include="plugins\HandlebarsS3Publisher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="templates\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />

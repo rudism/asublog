@@ -97,7 +97,7 @@ namespace Asublog.Core
                 }
                 catch(Exception ex)
                 {
-                    Log.Error("Error while saving post in plugin {0}", ex);
+                    Log.Error(string.Format("Error while saving post in plugin {0}", _savingPlugin.Name), ex);
                 }
             }
             try
@@ -106,11 +106,18 @@ namespace Asublog.Core
             }
             catch(Exception ex)
             {
-                Log.Error("Error while flushing plugin {0}", ex);
+                Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
             }
             foreach(var plugin in _publishingPlugins)
             {
-                plugin.Publish(_savingPlugin.GetPosts());
+                try
+                {
+                    plugin.Publish(_savingPlugin.GetPosts());
+                }
+                catch(Exception ex)
+                {
+                    Log.Error(string.Format("Error while publishing via plugin {0}", plugin.Name), ex);
+                }
             }
         }
 
