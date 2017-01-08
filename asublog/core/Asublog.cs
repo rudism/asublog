@@ -11,7 +11,9 @@ namespace Asublog.Core
     public interface IAsublog
     {
         ILogger Log { get; set; }
+        object TimerLock { get; }
         void ReceivePost(Post post);
+        PostEnumerator Wrap(IEnumerator<Post> posts);
         void Dispose();
     }
 
@@ -20,10 +22,13 @@ namespace Asublog.Core
         private LoggingPlugin[] _loggingPlugins;
         private PostingPlugin[] _postingPlugins;
         private PublishingPlugin[] _publishingPlugins;
+        private ProcessingPlugin[] _processingPlugins;
 
         private SavingPlugin _savingPlugin;
 
         private Dictionary<Guid, Timer> _timers;
+        private static readonly object _timerLock = new object();
+        public object TimerLock { get { return _timerLock; } }
 
         public ILogger Log { get; set; }
 
@@ -46,6 +51,7 @@ namespace Asublog.Core
             _loggingPlugins = loader.GetPlugins<LoggingPlugin>();
             _postingPlugins = loader.GetPlugins<PostingPlugin>();
             _publishingPlugins = loader.GetPlugins<PublishingPlugin>();
+            _processingPlugins = loader.GetPlugins<ProcessingPlugin>();
 
             var saving = loader.GetPlugins<SavingPlugin>();
             if(saving.Length != 1)
@@ -66,20 +72,25 @@ namespace Asublog.Core
                 {
                     var timer = new Timer((s) =>
                     {
-                        try
+                        lock(TimerLock)
                         {
-                            Log.Info(string.Format("Pinging plugin {0}", plugin.Name));
-                            plugin.Ping();
-                        }
-                        catch(Exception ex)
-                        {
-                            Log.Error(string.Format("Error while pinging plugin {0}", plugin.Name), ex);
+                            try
+                            {
+                                Log.Info(string.Format("Pinging plugin {0}", plugin.Name));
+                                plugin.Ping();
+                            }
+                            catch(Exception ex)
+                            {
+                                Log.Error(string.Format("Error while pinging plugin {0}", plugin.Name), ex);
+                            }
                         }
                         _timers[id].Change(plugin.PingInterval * 1000, Timeout.Infinite);
                     }, null, plugin.PingInterval * 1000, Timeout.Infinite);
                     _timers.Add(id, timer);
                 }
             }
+
+            Log.Debug("Loaded plugins", new {_postingPlugins, _publishingPlugins, _processingPlugins, _savingPlugin, _loggingPlugins});
         }
 
         public void ReceivePost(Post post)
@@ -89,36 +100,50 @@ namespace Asublog.Core
 
         public void ReceivePosts(IEnumerable<Post> posts)
         {
-            foreach(var post in posts)
+            lock(TimerLock)
             {
+                foreach(var post in posts)
+                {
+                    try
+                    {
+                        _savingPlugin.Save(post);
+                    }
+                    catch(Exception ex)
+                    {
+                        Log.Error(string.Format("Error while saving post in plugin {0}", _savingPlugin.Name), ex);
+                    }
+                }
                 try
                 {
-                    _savingPlugin.Save(post);
+                    _savingPlugin.Flush();
                 }
                 catch(Exception ex)
                 {
-                    Log.Error(string.Format("Error while saving post in plugin {0}", _savingPlugin.Name), ex);
+                    Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
                 }
-            }
-            try
-            {
-                _savingPlugin.Flush();
-            }
-            catch(Exception ex)
-            {
-                Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
-            }
-            foreach(var plugin in _publishingPlugins)
-            {
-                try
+                foreach(var plugin in _publishingPlugins)
                 {
-                    plugin.Publish(_savingPlugin.GetPosts());
-                }
-                catch(Exception ex)
-                {
-                    Log.Error(string.Format("Error while publishing via plugin {0}", plugin.Name), ex);
+                    try
+                    {
+                        plugin.Publish(_savingPlugin.GetPosts());
+                    }
+                    catch(Exception ex)
+                    {
+                        Log.Error(string.Format("Error while publishing via plugin {0}", plugin.Name), ex);
+                    }
                 }
             }
+        }
+
+        public PostEnumerator Wrap(IEnumerator<Post> posts)
+        {
+            return new PostEnumerator
+            {
+                App = this,
+                Log = Log,
+                Posts = posts,
+                ProcessingPlugins = _processingPlugins
+            };
         }
 
         public void Dispose()

@@ -18,9 +18,9 @@ namespace Asublog.Plugins
             _posts.Add(post);
         }
 
-        public override IEnumerator<Post> GetPosts()
+        public override PostEnumerator GetPosts()
         {
-            return _posts.OrderByDescending(p => p.Created).GetEnumerator();
+            return App.Wrap(_posts.OrderByDescending(p => p.Created).GetEnumerator());
         }
     }
 }

@@ -31,12 +31,18 @@ namespace Asublog.Plugins
         public virtual void Ping() { }
     }
 
+    public abstract class ProcessingPlugin : Plugin
+    {
+        protected ProcessingPlugin(string name, string version) : base(name, version) { }
+        public abstract void Process(Post post);
+    }
+
     public abstract class SavingPlugin : Plugin
     {
         protected SavingPlugin(string name, string version) : base(name, version) { }
         public abstract void Save(Post post);
         public virtual void Flush() { }
-        public abstract IEnumerator<Post> GetPosts();
+        public abstract PostEnumerator GetPosts();
     }
 
     public abstract class PublishingPlugin : Plugin

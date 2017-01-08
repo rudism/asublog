@@ -35,16 +35,16 @@ namespace Asublog.Plugins
         }
     }
 
-    class PostEnumerator : IEnumerator<Post>
+    class ConvertedPostEnumerator : IEnumerator<Post>
     {
         private IEnumerator<DbPost> _posts;
-        public PostEnumerator(IEnumerator<DbPost> posts)
+        public ConvertedPostEnumerator(IEnumerator<DbPost> posts)
         {
             _posts = posts;
         }
 
         public Post Current { get { return _posts.Current.ToPost(); } }
-        object IEnumerator.Current { get { return _posts.Current.ToPost(); } }
+        object IEnumerator.Current { get { return Current; } }
         public void Dispose() { _posts.Dispose(); }
         public bool MoveNext() { return _posts.MoveNext(); }
         public void Reset() { _posts.Reset(); }
@@ -77,9 +77,9 @@ namespace Asublog.Plugins
             _db.Insert(DbPost.FromPost(post));
         }
 
-        public override IEnumerator<Post> GetPosts()
+        public override PostEnumerator GetPosts()
         {
-            return new PostEnumerator(_db.Table<DbPost>().OrderByDescending(p => p.Created).GetEnumerator());
+            return App.Wrap(new ConvertedPostEnumerator(_db.Table<DbPost>().OrderByDescending(p => p.Created).GetEnumerator()));
         }
 
         public override void Dispose()
