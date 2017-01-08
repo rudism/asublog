@@ -1,6 +1,6 @@
 *Note: This project is still in early stages of development and not yet functional in any way.*
 
-# AS&micro;Blog
+# as&micro;Blog
 
 ## The Anti-Social Microblogging Framework
 
@@ -8,55 +8,30 @@ A simple framework for running a self-hosted single-user microblog.
 
 ### Posting Methods
 
-- Send a chat message to an XMPP bot
-- Share a link on [Pinboard.in](https://pinboard.in) with a specific tag
+- as&micro;Blog will connect to your XMPP server and convert any chat messages you send to it into posts
+- as&micro;Blog will monitor your [Pinboard.in](https://pinboard.in) feed for a specific tag and turn those shared links into posts
+- going to think up a good way to do image posts as well
 
 ### Publishing Methods
 
-- HTML template uploaded to S3
+- Handlebars templates uploaded to an S3 bucket (index, post details, rss feed)
 
 ## Extensibility
 
-Written with extensibility in mind. Write your own plugins to generate and publish posts from and to any source imaginable.
+Written with extensibility in mind. You can write and run as many logging, posting, and publishing plugins as you can dream up to create posts from any number of sources and save them to any number of formats and destinations.
+
+The only real limitation is you can just use one data saving plugin at a time. Currenly available are an ephemeral in-memory store or a SQLite database.
 
 ## Usage
 
-Create your configuration:
+1. Rename `config.yml.example` to `config.yml` and edit to suit your needs. See the [example config](https://github.com/rudism/asublog/blob/master/asublog/config.yml.example) to see how it works.
 
-```shell
-asublog $> cp asublog/config.yml.example asublog/config.yml
-asublog $> vim asublog/config.yml
-```
+2. Compile and run with mono:
 
-```yaml
-plugins:
-  - consoleLogger
-  - xmppPoster
-  - pinboardPoster
-  - s3Saver
+  ```shell
+  asublog $> nuget restore
+  asublog $> xbuild /t:Release
+  asublog $> mono asubuild/bin/Release/asubuild.exe
+  ```
 
-xmppPosterConfig:
-  host: my-xmpp-server.com
-  jid: mybot@my-xmpp-server.com
-  password: my-super-secret-password
-  authorized: me@my-xmpp-server.com
-
-pinboardPosterConfig:
-  username: myusername
-  password: mypassword
-  tag: microblog
-  interval: 300
-
-s3SaverConfig:
-  bucket: mysweetmicroblog.com
-  template: /path/to/my/template.html
-  postsPerPage: 30
-```
-
-Compile and run with mono:
-
-```shell
-asublog $> nuget restore
-asublog $> xbuild /t:Release
-asublog $> mono asubuild/bin/Release/asubuild.exe
-```
+3. Start posting to your amazing new single-user microblog!
