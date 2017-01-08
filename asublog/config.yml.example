@@ -1,0 +1,14 @@
+plugins:
+  - consoleLogger
+  - xmppPoster
+  - pinboardPoster
+  - consoleSaver
+
+xmppPosterConfig:
+  host: my-xmpp-server.com
+  jid: mybot@my-xmpp-server.com
+  password: my-super-secret-password
+  authorized: me@my-xmpp-server.com
+
+pinboardPosterConfig:
+  interval: 300
