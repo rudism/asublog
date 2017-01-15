@@ -81,6 +81,7 @@
     <Compile Include="plugins\ImageProcessor.cs" />
     <Compile Include="plugins\AutoPoster.cs" />
     <Compile Include="plugins\lib\JSONParser.cs" />
+    <Compile Include="plugins\UserLinkProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yml">
