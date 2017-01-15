@@ -19,7 +19,7 @@ namespace Asublog.Plugins
     public class HandlebarsS3Publisher : PublishingPlugin
     {
         private static readonly string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "templates");
-        private string _assetpath;
+        private string _assetPath;
         private Func<object, string> _index;
         private Func<object, string> _post;
         private int _postsPerPage;
@@ -38,7 +38,7 @@ namespace Asublog.Plugins
                 throw new ArgumentException("No theme was specified");
 
             var themePath = Path.Combine(_basePath, theme);
-            _assetpath = Path.Combine(themePath, "assets");
+            _assetPath = Path.Combine(themePath, "assets");
 
             var index = Path.Combine(themePath, "index.handlebars");
             if(!File.Exists(index)) throw new FileNotFoundException("Could not find index template", index);
@@ -89,6 +89,36 @@ namespace Asublog.Plugins
             return UploadContent(fname, content);
         }
 
+        private string Md5ToStr(byte[] hash)
+        {
+            var sb = new StringBuilder();
+            for(var i = 0; i < hash.Length; i++)
+            {
+                sb.Append(hash[i].ToString("x2"));
+            }
+            return sb.ToString();
+        }
+
+        private string GetETag(string key)
+        {
+            try
+            {
+                var headReq = new GetObjectMetadataRequest
+                {
+                    BucketName = _bucket,
+                    Key = key
+                };
+
+                var head = _client.GetObjectMetadata(headReq);
+                return head.ETag.Trim(new[] {'"'});
+            }
+            catch(AmazonS3Exception ex)
+            {
+                if(ex.StatusCode != HttpStatusCode.NotFound) throw;
+            }
+            return null;
+        }
+
         private string UploadContent(string fname, string content)
         {
             string md5;
@@ -96,38 +126,13 @@ namespace Asublog.Plugins
             {
                 var bytes = Encoding.UTF8.GetBytes(content);
                 var hash = md5er.ComputeHash(bytes);
-                var sb = new StringBuilder();
-                for(var i = 0; i < hash.Length; i++)
-                {
-                    sb.Append(hash[i].ToString("x2"));
-                }
-                md5 = sb.ToString();
+                md5 = Md5ToStr(hash);
             }
 
-            var upload = true;
-            try
-            {
-                var headReq = new GetObjectMetadataRequest
-                {
-                    BucketName = _bucket,
-                    Key = fname
-                };
+            var etag = GetETag(fname);
 
-                var head = _client.GetObjectMetadata(headReq);
-                var etag = head.ETag.Trim(new[] {'"'});
-                Log.Debug(string.Format("Content md5 {0}, S3 etag {1}", md5, etag));
-                if(md5.Equals(etag, StringComparison.OrdinalIgnoreCase))
-                {
-                    upload = false;
-                    Log.Info(string.Format("Skipping s3://{0}/{1} (file unchanged)", _bucket, fname));
-                }
-            }
-            catch(AmazonS3Exception ex)
-            {
-                if(ex.StatusCode != HttpStatusCode.NotFound) throw;
-            }
-
-            if(upload)
+            Log.Debug(string.Format("Content md5 {0}, S3 etag {1}", md5, etag));
+            if(!md5.Equals(etag, StringComparison.OrdinalIgnoreCase))
             {
                 var putReq = new PutObjectRequest
                 {
@@ -145,22 +150,77 @@ namespace Asublog.Plugins
                 {
                     Log.Error(string.Format("Got unexpected result when uploading s3://{0}/{1}: {2}", _bucket, fname, resp.HttpStatusCode));
                 }
+                return string.Format("/{0}", fname);
             }
-
-            return upload ? string.Format("/{0}", fname) : null;
+            else
+            {
+                Log.Debug(string.Format("Skipping s3://{0}/{1} (file unchanged)", _bucket, fname));
+            }
+            return null;
         }
 
-        private List<string> UploadAssets()
+        private string UploadFile(string path, string dir)
         {
-            var paths = 
-            var assetpath = Path.Combine(
-            Log.Debug("Uploading assets directory");
-            var tu = new TransferUtility(_client);
-            var req = new TransferUtilityUploadDirectoryRequest
+            string md5;
+            using(var md5er = MD5.Create())
             {
+                using(var stream = File.OpenRead(path))
+                {
+                    var hash = md5er.ComputeHash(stream);
+                    md5 = Md5ToStr(hash);
+                }
+            }
 
-            };
-            tu.UploadDirectory(req);
+            var key = string.Format("{0}/{1}", dir, Path.GetFileName(path));
+            var etag = GetETag(key);
+
+            if(!md5.Equals(etag, StringComparison.OrdinalIgnoreCase))
+            {
+                var putReq = new PutObjectRequest
+                {
+                    BucketName = _bucket,
+                    Key = key,
+                    FilePath = path
+                };
+
+                var resp = _client.PutObject(putReq);
+                if(resp.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    Log.Info(string.Format("Uploaded s3://{0}/{1}", _bucket, key));
+                    return string.Format("/{0}", key);
+                }
+                else
+                {
+                    Log.Error(string.Format("Got unexpected result when uploading s3://{0}/{1}: {2}", _bucket, key, resp.HttpStatusCode));
+                }
+            }
+            else
+            {
+                Log.Debug(string.Format("Skipping s3://{0}/{1} (file unchanged)", _bucket, key));
+            }
+            return null;
+        }
+
+        private List<string> UploadDirectory(string path, string dir)
+        {
+            Log.Debug(string.Format("Uploading directory {0} ({1})", path, dir));
+            var uploaded = new List<string>();
+            var files = Directory.GetFiles(path);
+            foreach(var file in files)
+            {
+                var fpath = Path.Combine(path, file);
+                string key;
+                if(!string.IsNullOrEmpty((key = UploadFile(fpath, dir))))
+                    uploaded.Add(key);
+            }
+            var folders = Directory.GetDirectories(path);
+            foreach(var folder in folders)
+            {
+                var newdir = string.Format("{0}/{1}", dir, Path.GetFileName(folder));
+                var dpath = Path.Combine(path, folder);
+                uploaded.AddRange(UploadDirectory(dpath, newdir));
+            }
+            return uploaded;
         }
 
         public override void Publish(IEnumerator<Post> posts, int count)
@@ -187,6 +247,8 @@ namespace Asublog.Plugins
 
             var invalidPaths = invalidations.Where(i => !string.IsNullOrEmpty(i)).ToList();
 
+            invalidPaths.AddRange(UploadDirectory(_assetPath, "assets"));
+
             if(invalidPaths.Count > 0)
             {
                 var distId = Config["cloudfrontDistId"];
@@ -200,7 +262,11 @@ namespace Asublog.Plugins
                         DistributionId = distId,
                         InvalidationBatch = new InvalidationBatch
                         {
-                            Paths = new Paths { Quantity = 1, Items = invalidPaths },
+                            Paths = new Paths
+                            {
+                                Quantity = invalidPaths.Count,
+                                Items = invalidPaths
+                            },
                             CallerReference = DateTime.Now.Ticks.ToString()
                         }
                     };
