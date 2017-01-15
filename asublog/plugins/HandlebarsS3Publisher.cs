@@ -7,6 +7,7 @@ namespace Asublog.Plugins
     using System.Net;
     using System.Security.Cryptography;
     using System.Text;
+    using System.Text.RegularExpressions;
     using Amazon;
     using Amazon.CloudFront;
     using Amazon.CloudFront.Model;
@@ -25,6 +26,7 @@ namespace Asublog.Plugins
         private int _postsPerPage;
         private AmazonS3Client _client;
         private string _bucket;
+        private static readonly Regex _hashtags = new Regex(@"(?<=(\s|^)#)(?<hashtag>[a-zA-Z0-9-_]+)(?=(\s|$))", RegexOptions.Compiled);
 
         public HandlebarsS3Publisher() : base("handlebarsS3Publisher", "0.5") { }
 
@@ -58,9 +60,9 @@ namespace Asublog.Plugins
                 RegionEndpoint.GetBySystemName(Config["awsRegion"]));
         }
 
-        private string SaveIndex(Post[] posts, int pageNum, int maxPage)
+        private string SaveIndex(Post[] posts, string prefix, int pageNum, int maxPage)
         {
-            var fname = string.Format("index{0}.html", pageNum > 0 ? pageNum.ToString() : null);
+            var fname = string.Format("{0}{1}.html", prefix, pageNum > 0 ? pageNum.ToString() : null);
 
             var content = _index(new
             {
@@ -223,6 +225,23 @@ namespace Asublog.Plugins
             return uploaded;
         }
 
+        public void Hashtagify(Dictionary<string, List<Post>> hashtags, Post post)
+        {
+            Log.Debug(string.Format("Looking for hashtags in post {0}", post.Id), post);
+            var matches = _hashtags.Matches(post.Content);
+            foreach(Match match in matches)
+            {
+                var hashtag = match.Value.ToLower();
+                Log.Debug(string.Format("Found hashtag {0} in post {1}", hashtag, post.Id));
+                if(!hashtags.ContainsKey(hashtag))
+                    hashtags.Add(hashtag, new List<Post>());
+                if(!hashtags[hashtag].Contains(post))
+                    hashtags[hashtag].Add(post);
+
+                post.Content = post.Content.Replace(string.Format("#{0}", hashtag), string.Format("<a href='/{0}.html'>#{0}</a>", hashtag));
+            }
+        }
+
         public override void Publish(IEnumerator<Post> posts, int count)
         {
             var invalidations = new List<string>();
@@ -230,19 +249,44 @@ namespace Asublog.Plugins
             var maxPage = (int) Math.Ceiling((float) count / _postsPerPage) - 1;
             var page = 0;
             var pagePosts = new List<Post>();
+            var hashtags = new Dictionary<string, List<Post>>();
             while(posts.MoveNext())
             {
-                invalidations.Add(SavePost(posts.Current));
-                pagePosts.Add(posts.Current);
+                var clone = (Post) posts.Current.Clone();
+                if(Config["hashtags"] == "true")
+                    Hashtagify(hashtags, clone);
+
+                invalidations.Add(SavePost(clone));
+                pagePosts.Add(clone);
                 if(pagePosts.Count == _postsPerPage)
                 {
-                    invalidations.Add(SaveIndex(pagePosts.ToArray(), page++, maxPage));
+                    invalidations.Add(SaveIndex(pagePosts.ToArray(), "index", page++, maxPage));
                     pagePosts.Clear();
                 }
             }
             if(pagePosts.Count > 0)
             {
-                invalidations.Add(SaveIndex(pagePosts.ToArray(), page, maxPage));
+                invalidations.Add(SaveIndex(pagePosts.ToArray(), "index", page, maxPage));
+            }
+
+            foreach(var hashtag in hashtags.Keys)
+            {
+                page = 0;
+                pagePosts.Clear();
+                maxPage = (int) Math.Ceiling((float) hashtags[hashtag].Count / _postsPerPage) - 1;
+                foreach(var post in hashtags[hashtag])
+                {
+                    pagePosts.Add(post);
+                    if(pagePosts.Count == _postsPerPage)
+                    {
+                        invalidations.Add(SaveIndex(pagePosts.ToArray(), hashtag, page++, maxPage));
+                        pagePosts.Clear();
+                    }
+                }
+                if(pagePosts.Count > 0)
+                {
+                    invalidations.Add(SaveIndex(pagePosts.ToArray(), hashtag, page, maxPage));
+                }
             }
 
             var invalidPaths = invalidations.Where(i => !string.IsNullOrEmpty(i)).ToList();

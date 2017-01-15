@@ -11,7 +11,7 @@ namespace Asublog.Core
         public string Content { get; set; }
     }
 
-    public class Post
+    public class Post : ICloneable
     {
         public Guid Id { get; set; }
         public DateTime Created { get; set; }
@@ -44,6 +44,23 @@ namespace Asublog.Core
             Id = Guid.NewGuid();
             Created = DateTime.UtcNow;
             _attachments = new List<Attachment>();
+        }
+
+        public object Clone()
+        {
+            var clone = new Post
+            {
+                Id = Id,
+                Created = new DateTime(Created.Ticks),
+                Content = Content,
+                Source = Source,
+                Processed = Processed
+            };
+            foreach(var attachment in Attachments)
+            {
+                clone.Attach(attachment.Type, attachment.Url, attachment.Content);
+            }
+            return clone;
         }
     }
 }
