@@ -24,6 +24,7 @@ namespace Asublog.Plugins
                     {
                         var post = new Post
                         {
+                            Source = "xmpp",
                             Content = e.Message.Body
                         };
                         App.ReceivePost(post);

@@ -16,6 +16,7 @@ namespace Asublog.Core
         public Guid Id { get; set; }
         public DateTime Created { get; set; }
         public string Content { get; set; }
+        public string Source { get; set; }
 
         public bool Processed { get; set; }
 

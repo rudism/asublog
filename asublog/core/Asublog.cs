@@ -86,7 +86,7 @@ namespace Asublog.Core
                             }
                         }
                         _timers[id].Change(plugin.PingInterval * 1000, Timeout.Infinite);
-                    }, null, plugin.PingInterval * 1000, Timeout.Infinite);
+                    }, null, 0, Timeout.Infinite);
                     _timers.Add(id, timer);
                 }
             }

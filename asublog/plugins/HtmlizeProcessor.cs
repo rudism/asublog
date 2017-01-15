@@ -6,7 +6,7 @@ namespace Asublog.Plugins
     public class HtmlizeProcessor : ProcessingPlugin
     {
         private static readonly Regex _urls =
-            new Regex(@"(?<=(^|\s))(www\.|https?://)([^\s]+)(?=(\s|$))",
+            new Regex(@"(?<=(^|\s))(www\.|https?://)([^\s]+)(?=(\s|\.(\s|$)|,\s|$))",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex _hasproto =
@@ -36,7 +36,7 @@ namespace Asublog.Plugins
                 }
                 var noproto = _excess.Replace(url, string.Empty);
 
-                post.Content = post.Content.Replace(url,
+                post.Content = post.Content.Replace(match.Value,
                     string.Format("<a href='{0}'>{1}</a>", url, noproto));
             }
 

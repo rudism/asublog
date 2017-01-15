@@ -16,6 +16,7 @@ namespace Asublog.Plugins
             Log.Info("Creating auto post");
             App.ReceivePost(new Post
             {
+                Source = "auto",
                 Content = Config["content"]
             });
         }

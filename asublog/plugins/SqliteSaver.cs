@@ -13,6 +13,7 @@ namespace Asublog.Plugins
         public Guid Id { get; set; }
         public DateTime Created { get; set; }
         public string Content { get; set; }
+        public string Source { get; set; }
 
         public static DbPost FromPost(Post post)
         {
