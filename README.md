@@ -1,20 +1,27 @@
-*Note: This project is still in early stages of development and not yet functional in any way.*
-
 # as&micro;Blog
 
-## The Anti-Social Microblogging Framework
+## The Antisocial Microblogging Framework
 
-A simple framework for running a self-hosted single-user microblog.
+A simple framework for running a self-hosted single-user microblog. To see an example of a microblog generated using as&micro;Blog, check out [status.rudism.com](https://status.rudism.com).
 
 ### Posting Methods
 
 - as&micro;Blog will connect to your XMPP server and convert any chat messages you send to it into posts
 - as&micro;Blog will monitor your [Pinboard.in](https://pinboard.in) feed for a specific tag and turn those shared links into posts
-- going to think up a good way to do image posts as well
+
+### Media Extraction & Processing
+
+- Shared dropbox photo urls will embed the photo in the post
+- Twitter status urls will quote the linked tweet in your post and embed its image (if it has one)
+- Convert urls into links
+- Shorten links using a [lilurl](http://lilurl.sourceforge.net) domain
+- Auto link `#hashtags`
+- Auto link `@Usernames` to custom urls or Twitter profiles
 
 ### Publishing Methods
 
-- Handlebars templates uploaded to an S3 bucket (index, post details, rss feed)
+- Generate static site from [Handlebars](http://handlebarsjs.com) templates and upload to an S3 bucket
+- Optionally create invalidations against a CloudFront distribution
 
 ## Extensibility
 

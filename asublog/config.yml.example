@@ -4,6 +4,7 @@ plugins:
   - pinboardPoster
   - sqliteSaver
   - imageProcessor
+  - retweetProcessor
   - lilurlProcessor
   - htmlizeProcessor
   - userLinkProcessor
@@ -34,6 +35,14 @@ handlebarsS3PublisherConfig:
   cloudfrontDistId: MYCLOUDFRONTDISTID
   hashtags: true
   tz: America/Chicago
+  siteUrl: http://mymicroblog.com
+  siteName: as&micro;Blog
+  siteCreated: 1/15/2017
+  userName: Author
+  userLinkName: Source Code
+  userLinkUrl: https://github.com/rudism/asublog
+  siteDescription: as&micro;Blog is the Antisocial Microblogging framework, a self-hosted static-site microblog generator.
+  location: Earth, Sol, Milky Way
 
 lilurlProcessorConfig:
   url: mylilurl.com
