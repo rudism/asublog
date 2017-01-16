@@ -21,7 +21,8 @@ namespace Asublog.Plugins
             {
                 Id = post.Id,
                 Created = post.Created,
-                Content = post.Content
+                Content = post.Content,
+                Source = post.Source
             };
         }
 
@@ -31,7 +32,8 @@ namespace Asublog.Plugins
             {
                 Id = this.Id,
                 Created = this.Created,
-                Content = this.Content
+                Content = this.Content,
+                Source = this.Source
             };
         }
     }
