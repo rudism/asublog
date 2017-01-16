@@ -74,6 +74,10 @@ namespace Asublog.Plugins
                     {
                         var json = sr.ReadToEnd();
                         Log.Debug("Pinboard Json", json);
+
+                        if(json.Contains(@"""posts"":[]"))
+                            return new PinboardPost[] {};
+
                         var collection = json.FromJson<JsonPinboardPostCollection>();
                         Log.Debug("Parsed pinboard posts", collection);
                         _skipped = 0;
