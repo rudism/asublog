@@ -19,6 +19,8 @@ namespace Asublog.Plugins
 
     public class ExtendedPost : Post
     {
+        public IConfiguration Config { get; set; }
+
         public ExtendedPost(Post post)
         {
             Id = post.Id;
@@ -50,10 +52,13 @@ namespace Asublog.Plugins
         {
             get { return Attachments.FirstOrDefault(a => a.Type == "tweet"); }
         }
+
+        public string UserName { get { return Config["userName"]; } }
     }
 
     public class HandlebarsPageData
     {
+        public IConfiguration Config { get; set; }
         public IEnumerable<ExtendedPost> Posts { get; set; }
         public ExtendedPost Post { get; set; }
         public int TotalPosts { get; set; }
@@ -84,6 +89,15 @@ namespace Asublog.Plugins
         }
         public bool IsHashtag { get { return Prefix != "index"; } }
         public bool HasHashtags { get { return RecentTags != null && RecentTags.Count() > 0; } }
+
+        public string SiteUrl { get { return Config["siteUrl"]; } }
+        public string SiteName { get { return Config["siteName"]; } }
+        public string SiteCreated { get { return Config["siteCreated"]; } }
+        public string UserName { get { return Config["userName"]; } }
+        public string UserLinkName { get { return Config["userLinkName"]; } }
+        public string UserLinkUrl { get { return Config["userLinkUrl"]; } }
+        public string SiteDescription { get { return Config["siteDescription"]; } }
+        public string Location { get { return Config["location"]; } }
     }
 
     public class HandlebarsS3Publisher : PublishingPlugin
@@ -124,6 +138,14 @@ namespace Asublog.Plugins
                 writer.WriteSafeString(date);
             });
 
+            Handlebars.RegisterHelper("encode",
+            (writer, context, parameters) =>
+            {
+                if(parameters.Length != 1)
+                    throw new ArgumentException("escape helper must have exactly one argument");
+
+                writer.WriteSafeString(WebUtility.HtmlEncode((string) parameters[0]));
+            });
 
             var themePath = Path.Combine(_basePath, theme);
             _assetPath = Path.Combine(themePath, "assets");
@@ -350,6 +372,7 @@ namespace Asublog.Plugins
             var hashtags = new Dictionary<string, List<ExtendedPost>>();
             var data = new HandlebarsPageData
             {
+                Config = Config,
                 TotalPosts = count,
                 MaxPage = (int) Math.Ceiling((float) count / _postsPerPage) - 1,
                 PageNum = 0,
@@ -361,7 +384,7 @@ namespace Asublog.Plugins
             };
             while(posts.MoveNext())
             {
-                var clone = new ExtendedPost((Post) posts.Current.Clone());
+                var clone = new ExtendedPost((Post) posts.Current.Clone()) { Config = Config };
                 if(Config["hashtags"] == "true")
                     Hashtagify(hashtags, clone);
 
@@ -386,6 +409,7 @@ namespace Asublog.Plugins
             {
                 var hashData = new HandlebarsPageData
                 {
+                    Config = Config,
                     TotalPosts = hashtags[hashtag].Count,
                     MaxPage = (int) Math.Ceiling((float) hashtags[hashtag].Count / _postsPerPage) - 1,
                     PageNum = 0,

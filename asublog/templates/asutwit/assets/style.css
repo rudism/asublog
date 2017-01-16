@@ -77,11 +77,16 @@ div.stats>h5 {
 }
 
 .post-media>a {
-  text-indent: -9999px;
   display: block;
   height: 200px;
   background-size: 100%;
   background-position: center;
+  overflow: hidden;
+}
+.post-media>a>img {
+  position: relative;
+  width: 100%;
+  top: -33%;
 }
 
 .postnav, .caption {
@@ -97,4 +102,7 @@ div.stats>h5 {
 .caption>strong {
   font-weight: bold;
   color: #66757f;
+}
+.img-postimage {
+  width: 100%;
 }
