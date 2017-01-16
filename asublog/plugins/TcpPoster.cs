@@ -59,12 +59,19 @@ namespace Asublog.Plugins
                 using(var reader = new StreamReader(client.GetStream()))
                 {
                     var content = reader.ReadToEnd().Trim();
-                    Log.Debug("Tcp server received content", content);
-                    App.ReceivePost(new Post
+                    if(!string.IsNullOrWhiteSpace(content))
                     {
-                        Source = "tcpserver",
-                        Content = content
-                    });
+                        Log.Debug("Tcp server received content", content);
+                        App.ReceivePost(new Post
+                        {
+                            Source = "tcpserver",
+                            Content = content
+                        });
+                    }
+                    else
+                    {
+                        Log.Error("Tcp server received empty content");
+                    }
                 }
                 client.Close();
             }
