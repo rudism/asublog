@@ -8,6 +8,7 @@ A simple framework for running a self-hosted single-user microblog. To see an ex
 
 - as&micro;Blog will connect to your XMPP server and convert any chat messages you send to it into posts
 - as&micro;Blog will monitor your [Pinboard.in](https://pinboard.in) feed for a specific tag and turn those shared links into posts
+- send new posts to a local TCP port on the asu&micro;Blog server
 
 ### Media Extraction & Processing
 

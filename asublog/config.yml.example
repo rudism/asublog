@@ -2,6 +2,7 @@ plugins:
   - consoleLogger
   - xmppPoster
   - pinboardPoster
+  - tcpPoster
   - sqliteSaver
   - imageProcessor
   - retweetProcessor
@@ -21,6 +22,9 @@ pinboardPosterConfig:
   tag: asublog
   user: myusername
   userToken: MYPINBOARDAUTHTOKEN
+
+tcpPosterConfig
+  port: 4962
 
 sqliteSaverConfig:
   db: /tmp/posts.db
