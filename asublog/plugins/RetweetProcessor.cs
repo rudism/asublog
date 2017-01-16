@@ -9,7 +9,7 @@ namespace Asublog.Plugins
     public class RetweetProcessor : ProcessingPlugin
     {
         private static readonly Regex _twitter =
-            new Regex(@"(?<=(^|\s))https?://(www\.)?twitter\.com/(?<user>[a-zA-Z0-9_]+)/status/(?<id>\d+)(?=([^\d]|$))",
+            new Regex(@"(?<=(^|\s))https?://((www|mobile)\.)?twitter\.com/(?<user>[a-zA-Z0-9_]+)/status/(?<id>\d+)(?=([^\d]|$))",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex _ogdata =
@@ -72,7 +72,8 @@ namespace Asublog.Plugins
                 }
                 if(!string.IsNullOrEmpty(tweet))
                 {
-                    post.Attach("tweet", url, tweet, true);
+                    var nonMobileUrl = url.Replace("//mobile.", "//");
+                    post.Attach("tweet", nonMobileUrl, tweet, true);
                 }
                 if(!string.IsNullOrEmpty(image))
                 {
