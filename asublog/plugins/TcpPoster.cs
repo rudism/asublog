@@ -29,7 +29,7 @@ namespace Asublog.Plugins
             {
                 server.Start();
 
-                Log.Debug(string.Format("Tcp server listening on port {0}", port));
+                Log.Info(string.Format("Tcp server listening on port {0}", port));
                 _keepRunning = true;
 
                 while(_keepRunning)
@@ -47,7 +47,7 @@ namespace Asublog.Plugins
             finally
             {
                 server.Stop();
-                Log.Debug("Tcp server stopped");
+                Log.Info("Tcp server stopped");
             }
         }
 
