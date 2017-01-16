@@ -73,6 +73,23 @@ namespace Asublog.Plugins
             if(string.IsNullOrEmpty(theme))
                 throw new ArgumentException("No theme was specified");
 
+            Handlebars.RegisterHelper("tz_created",
+            (writer, context, parameters) =>
+            {
+                var date = (DateTime) context.Created;
+                var tz = Config["tz"];
+                if(!string.IsNullOrEmpty(tz))
+                {
+                    var tzinfo = TimeZoneInfo.FindSystemTimeZoneById(tz);
+                    if(tzinfo != null)
+                    {
+                        date = TimeZoneInfo.ConvertTimeFromUtc(date, tzinfo);
+                    }
+                }
+                writer.WriteSafeString(date);
+            });
+
+
             var themePath = Path.Combine(_basePath, theme);
             _assetPath = Path.Combine(themePath, "assets");
 

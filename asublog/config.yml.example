@@ -3,7 +3,10 @@ plugins:
   - xmppPoster
   - pinboardPoster
   - sqliteSaver
-  - consolePublisher
+  - imageProcessor
+  - lilurlProcessor
+  - htmlizeProcessor
+  - userLinkProcessor
   - handlebarsS3Publisher
 
 xmppPosterConfig:
@@ -14,14 +17,30 @@ xmppPosterConfig:
 
 pinboardPosterConfig:
   interval: 300
+  tag: asublog
+  user: myusername
+  userToken: MYPINBOARDAUTHTOKEN
 
 sqliteSaverConfig:
   db: /tmp/posts.db
 
 handlebarsS3PublisherConfig:
-  postsPerPage: 50
-  index: index.html
+  postsPerPage: 20
+  theme: asutwit
   bucket: mysweetmicroblog.com
   awsKey: MYACCESSKEYID
   awsSecret: MYSECRETACCESSKEY
   awsRegion: us-east-1
+  cloudfrontDistId: MYCLOUDFRONTDISTID
+  hashtags: true
+  tz: America/Chicago
+
+lilurlProcessorConfig:
+  url: mylilurl.com
+
+htmlizeProcessorConfig:
+  allowNewlines: true
+
+userLinkProcessorConfig:
+  _autoTwitter: true
+  rudism: https://status.rudism.com

@@ -30,6 +30,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="Microsoft.Csharp" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="Mono.Posix" />
