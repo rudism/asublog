@@ -29,9 +29,31 @@ Written with extensibility in mind. You can write and run as many logging, posti
 
 The only real limitation is you can just use one data saving plugin at a time. Currenly available are an ephemeral in-memory store or a SQLite database.
 
+### Posting Plugins
+
+Posting plugins can either spin up their own thread to capture and create new posts at will (see [`XmppPoster`](https://github.com/rudism/asublog/blob/master/asublog/plugins/XmppPoster.cs) for an example), or can be pinged at a set interval to check for and create new posts (see [`PinboardPoster`](https://github.com/rudism/asublog/blob/master/asublog/plugins/PinboardPoster.cs) for an example).
+
+### Saving Plugins
+
+Saving plugins are responsible for persisting posts as well as acting as a key-value cache for other plugins. See [`MemorySaver`](https://github.com/rudism/asublog/blob/master/asublog/plugins/MemorySaver.cs) for a simple example which does not persist data between application runs.
+
+### Publishing Plugins
+
+Whenever a new post is received, publishing plugins are triggered with all of the blog's posts. See [`ConsolePublisher`](https://github.com/rudism/asublog/blob/master/asublog/plugins/ConsolePublisher.cs) for a simple example that just publishes new posts to the console.
+
+Some other possibilities would be a publisher that mirrors new posts to Twitter or automatically shares them to Facebook. These have not been written yet. Pull requests are welcome!
+
+### Processing Plugins
+
+Processing plugins are run against every new post prior to publishing them. Existing plugins do things like convert urls into links (see [`HtmlizeProcessor`](https://github.com/rudism/asublog/blob/master/asublog/plugins/HtmlizeProcessor.cs) for this example), extract image urls to generate embedded media, and pass links through a url shortener.
+
+### Logging Plugins
+
+Currently the only logging plugin is [`ConsoleLogger`](https://github.com/rudism/asublog/blob/master/asublog/plugins/ConsoleLogger.cs) which dumps log output to the console, but others could be written to suit your needs.
+
 ## Usage
 
-1. Rename `config.yml.example` to `config.yml` and edit to suit your needs. See the [example config](https://github.com/rudism/asublog/blob/master/asublog/config.yml.example) to see how it works.
+1. Rename `config.yml.example` to `config.yml` and edit to suit your needs. See the [example config](https://github.com/rudism/asublog/blob/master/asublog/config.yml.example) to see how it works. You must specify one saver plugin, but can specify as many or as few of the other plugins as suit your needs.
 
 2. Compile and run with mono:
 
