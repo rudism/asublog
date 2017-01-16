@@ -25,10 +25,12 @@ namespace Asublog.Core
         {
             get { return _attachments.ToArray(); }
         }
-        public Attachment[] Images
+        public Attachment Image
         {
-            get { return _attachments.Where(a => a.Type == "image").ToArray(); }
+            get { return _attachments.FirstOrDefault(a => a.Type == "image"); }
         }
+        public bool HasImage { get { return Image != null; } }
+
         public void Attach(string type, string url, string content)
         {
             _attachments.Add(new Attachment

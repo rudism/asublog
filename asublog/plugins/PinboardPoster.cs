@@ -103,9 +103,9 @@ namespace Asublog.Plugins
             }
 
             var posts = GetRecentPosts();
-            for(var i = posts.Length; i > 0; i--)
+            for(var i = posts.Length - 1; i >= 0; i--)
             {
-                var post = posts[i-1];
+                var post = posts[i];
                 if(App.CacheGet(post.Url) == null)
                 {
                     Log.Debug("New pinboard post detected", post);
@@ -115,7 +115,7 @@ namespace Asublog.Plugins
                         Created = post.Date,
                         Source = "pinboard",
                         Content = string.Format("{0} {1}{2}",
-                            post.Url, post.Name,
+                            post.Name, post.Url,
                             !string.IsNullOrEmpty(post.Description)
                                 ? string.Format(" - {0}", post.Description)
                                 : null)

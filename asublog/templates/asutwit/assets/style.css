@@ -1,3 +1,100 @@
-body {
-  background: #fff;
+.navbar {
+  margin-bottom: 0;
+}
+.banner {
+  margin-bottom: 20px;
+}
+.banner>img {
+  min-width: 100%;
+  border-bottom: 1px solid #8899a6;
+}
+
+.panel-about span.verified {
+  font-size: 80%;
+  color: #77c7f7;
+}
+
+.panel-about>.panel-heading {
+  background-image: linear-gradient(to bottom, #fefefe 0%, #f5f5f5 100%);
+}
+
+.panel-custom>.panel-heading {
+  background: none;
+  border-bottom: 0;
+  padding-bottom: 0;
+  color: #66757f;
+}
+
+.panel-about>.panel-heading>.panel-title {
+  font-size: 150%;
+  font-weight: bold;
+}
+div.stats {
+  margin-right: 1em;
+}
+div.stats>h5 {
+  margin-bottom: 0;
+}
+
+.panel-copyright small {
+  color: #8899a6;
+}
+
+.list-unstyled>li>.glyphicon {
+  color: #8899a6;
+  margin-right: 0.2em;
+}
+
+.meta-link>span, .meta-link>a {
+  margin-right: 0.75em;
+  color: #aab8c2;
+}
+
+.meta-link .glyphicon {
+  font-size: 80%;
+}
+
+.meta-link>a:hover {
+  color: #0D5B73;
+  text-decoration: none;
+}
+
+.panel-posts .media-heading>date {
+  color: #aab8c2;
+  font-size: 90%;
+  font-weight: normal;
+}
+
+.panel-posts>.panel-body {
+  border-bottom: 1px solid #dddddd;
+}
+.panel-posts>.panel-body:last-child {
+  border-bottom: 0;
+}
+.panel-posts .media-heading {
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.post-media>a {
+  text-indent: -9999px;
+  display: block;
+  height: 200px;
+  background-size: 100%;
+  background-position: center;
+}
+
+.postnav, .caption {
+  font-size: 120%;
+}
+.postnav .glyphicon {
+  color: #8899a6;
+  font-size: 80%;
+}
+.postnav a, .caption a {
+  color: #0D5B73;
+}
+.caption>strong {
+  font-weight: bold;
+  color: #66757f;
 }

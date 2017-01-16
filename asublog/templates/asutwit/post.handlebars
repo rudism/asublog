@@ -71,27 +71,15 @@
         <div class='col-sm-6'>
           <div class='panel panel-default panel-posts'>
 
-            {{#if IsHashtag}}
             <div class='panel-body'>
               <div class='caption'>
-                Viewing Tag <strong>#{{Prefix}}</strong>. <a href='/'>Click here</a> for all posts.
+                Viewing a single post. <a href='/'>Click here</a> for all posts.
               </div>
             </div>
-            {{else}}
-            {{#unless IsLastPage}}
-            <div class='panel-body'>
-              <div class='caption'>
-                You are viewing archived posts. <a href='{{Prefix}}.html'>Click here</a> for the latest.
-              </div>
-            </div>
-            {{/unless}}
-            {{/if}}
 
-            {{#each Posts}}
+            {{#with Post}}
             {{#if HasImage}}
-            <div class='post-media'>
-              <a href='post-{{Id}}.html' style="background-image: url('{{Image.Content}}');">Post</a>
-            </div>
+            <img class='img-responsive' src='{{Image.Content}}'>
             {{/if}}
             <div class='panel-body'>
               <div class='media'>
@@ -122,24 +110,7 @@
                 </div>
               </div>
             </div>
-            {{/each}}
-
-            {{#if HasPages}}
-            <div class='panel-body'>
-              {{#unless IsFirstPage}}
-              <div class='pull-left postnav'>
-                <span class='glyphicon glyphicon-menu-left'></span>
-                <a href='{{PrevPage}}'>Older Posts</a>
-              </div>
-              {{/unless}}
-              {{#unless IsLastPage}}
-              <div class='pull-right postnav'>
-                <a href='{{NextPage}}'>Newer Posts</a>
-                <span class='glyphicon glyphicon-menu-right'></span>
-              </div>
-              {{/unless}}
-            </div>
-            {{/if}}
+            {{/with}}
 
           </div>
         </div>

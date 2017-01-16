@@ -27,7 +27,7 @@ namespace Asublog.Plugins
 
         public override PostEnumerator GetPosts()
         {
-            return App.Wrap(_posts.OrderByDescending(p => p.Created).GetEnumerator());
+            return App.Wrap(((IEnumerable<Post>) _posts.OrderByDescending(p => p.Created).ToArray()).GetEnumerator());
         }
 
         public override void CacheSet(string plugin, string key, string val)

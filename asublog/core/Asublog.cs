@@ -99,6 +99,9 @@ namespace Asublog.Core
                 saver = _savingPlugin.Name,
                 loggers = _loggingPlugins.Select(p => p.Name).ToArray()
             });
+
+            var forcePublish = Environment.GetEnvironmentVariable("PUBLISH");
+            if(!string.IsNullOrEmpty(forcePublish)) Publish();
         }
 
         public void ReceivePost(Post post)
@@ -128,6 +131,11 @@ namespace Asublog.Core
             {
                 Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
             }
+            Publish();
+        }
+
+        private void Publish()
+        {
             foreach(var plugin in _publishingPlugins)
             {
                 try

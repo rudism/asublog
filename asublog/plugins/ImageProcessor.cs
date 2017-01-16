@@ -38,7 +38,7 @@ namespace Asublog.Plugins
                         var imgmatch = _imgsrc.Match(content);
                         if(imgmatch.Success)
                         {
-                            imgurl = imgmatch.Groups["src"].Value;
+                            imgurl = Regex.Unescape(imgmatch.Groups["src"].Value);
                             App.CacheSet(url, imgurl);
                             Log.Debug(string.Format("Found image url {0}", imgurl));
                         }

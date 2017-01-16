@@ -17,6 +17,40 @@ namespace Asublog.Plugins
     using HandlebarsDotNet;
     using Core;
 
+    public class HandlebarsPageData
+    {
+        public IEnumerable<Post> Posts { get; set; }
+        public Post Post { get; set; }
+        public int TotalPosts { get; set; }
+        public string TotalPostsFormatted
+        {
+            get { return string.Format("{0:n0}", TotalPosts); }
+        }
+        public int PageNum { get; set; }
+        public int MaxPage { get; set; }
+        public bool IsFirstPage { get { return PageNum == MaxPage; } }
+        public bool IsLastPage { get { return PageNum == 0; } }
+        public IEnumerable<string> RecentTags { get; set; }
+        public IEnumerable<string> PopularTags { get; set; }
+        public string Prefix { get; set; }
+        public bool HasPages { get { return MaxPage > 0; } }
+        public string PrevPage
+        {
+            get { return string.Format("{0}-{1}.html", Prefix, PageNum + 1); }
+        }
+        public string NextPage
+        {
+            get
+            {
+                return (PageNum - 1) == 0
+                    ? string.Format("{0}.html", Prefix)
+                    : string.Format("{0}-{1}.html", Prefix, PageNum - 1);
+            }
+        }
+        public bool IsHashtag { get { return Prefix != "index"; } }
+        public bool HasHashtags { get { return RecentTags != null && RecentTags.Count() > 0; } }
+    }
+
     public class HandlebarsS3Publisher : PublishingPlugin
     {
         private static readonly string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "templates");
@@ -26,7 +60,7 @@ namespace Asublog.Plugins
         private int _postsPerPage;
         private AmazonS3Client _client;
         private string _bucket;
-        private static readonly Regex _hashtags = new Regex(@"(?<=(\s|^)#)(?<hashtag>[a-zA-Z0-9-_]+)(?=(\s|$))", RegexOptions.Compiled);
+        private static readonly Regex _hashtags = new Regex(@"(?<=(\s|^)#)(?<hashtag>[a-zA-Z0-9_]+)(?=(\s|$))", RegexOptions.Compiled);
 
         public HandlebarsS3Publisher() : base("handlebarsS3Publisher", "0.5") { }
 
@@ -60,34 +94,24 @@ namespace Asublog.Plugins
                 RegionEndpoint.GetBySystemName(Config["awsRegion"]));
         }
 
-        private string SaveIndex(Post[] posts, string prefix, int pageNum, int maxPage)
+        private string SaveIndex(HandlebarsPageData data)
         {
-            var fname = string.Format("{0}{1}.html", prefix, pageNum > 0 ? pageNum.ToString() : null);
+            var fname = string.Format("{0}{1}.html", data.Prefix, data.PageNum > 0 ? string.Format("-{0}", data.PageNum) : null);
 
-            var content = _index(new
-            {
-                posts,
-                page = new
-                {
-                    num = pageNum,
-                    max = maxPage,
-                    isFirst = pageNum == 0,
-                    isLast = pageNum == maxPage
-                }
-            });
+            var content = _index(data);
 
-            Log.Debug(string.Format("Rendered index {0}", fname), content);
+            Log.Debug(string.Format("Rendered index {0}", fname));
             return UploadContent(fname, content);
         }
 
-        private string SavePost(Post post)
+        private string SavePost(HandlebarsPageData data)
         {
             if(_post == null) return null;
 
-            var fname = string.Format("posts/{0}.html", post.Id);
-            var content = _post(post);
+            var fname = string.Format("post-{0}.html", data.Post.Id);
+            var content = _post(data);
 
-            Log.Debug(string.Format("Rendered post {0}", fname), content);
+            Log.Debug(string.Format("Rendered post {0}", fname));
             return UploadContent(fname, content);
         }
 
@@ -238,54 +262,103 @@ namespace Asublog.Plugins
                 if(!hashtags[hashtag].Contains(post))
                     hashtags[hashtag].Add(post);
 
-                post.Content = post.Content.Replace(string.Format("#{0}", hashtag), string.Format("<a href='/{0}.html'>#{0}</a>", hashtag));
+                post.Content = post.Content.Replace(string.Format("#{0}", match.Value), string.Format("<a href='/{0}.html'>#{1}</a>", hashtag, match.Value));
             }
         }
 
         public override void Publish(IEnumerator<Post> posts, int count)
         {
+            // git all hashtags from all posts to build recent/popular lists
+            List<string> recentHashtags = null;
+            Dictionary<string, int> popularHashtags = null;
+            if(Config["hashtags"] == "true")
+            {
+                recentHashtags = new List<string>();
+                popularHashtags = new Dictionary<string, int>();
+                while(posts.MoveNext())
+                {
+                    var matches = _hashtags.Matches(posts.Current.Content);
+                    foreach(Match match in matches)
+                    {
+                        var hashtag = match.Value.ToLower();
+                        if(!recentHashtags.Contains(hashtag))
+                            recentHashtags.Add(hashtag);
+                        if(!popularHashtags.ContainsKey(hashtag))
+                            popularHashtags.Add(hashtag, 0);
+                        popularHashtags[hashtag] += 1;
+                    }
+                }
+            }
+
+            posts.Reset();
+
             var invalidations = new List<string>();
 
-            var maxPage = (int) Math.Ceiling((float) count / _postsPerPage) - 1;
-            var page = 0;
             var pagePosts = new List<Post>();
             var hashtags = new Dictionary<string, List<Post>>();
+            var data = new HandlebarsPageData
+            {
+                TotalPosts = count,
+                MaxPage = (int) Math.Ceiling((float) count / _postsPerPage) - 1,
+                PageNum = 0,
+                Prefix = "index",
+                RecentTags = recentHashtags,
+                PopularTags = popularHashtags != null
+                    ? popularHashtags.OrderByDescending(t => t.Value).Select(t => t.Key).ToArray()
+                    : null
+            };
             while(posts.MoveNext())
             {
                 var clone = (Post) posts.Current.Clone();
                 if(Config["hashtags"] == "true")
                     Hashtagify(hashtags, clone);
 
-                invalidations.Add(SavePost(clone));
+                data.Post = clone;
+                invalidations.Add(SavePost(data));
                 pagePosts.Add(clone);
                 if(pagePosts.Count == _postsPerPage)
                 {
-                    invalidations.Add(SaveIndex(pagePosts.ToArray(), "index", page++, maxPage));
+                    data.Posts = pagePosts.ToArray();
+                    invalidations.Add(SaveIndex(data));
+                    data.PageNum += 1;
                     pagePosts.Clear();
                 }
             }
             if(pagePosts.Count > 0)
             {
-                invalidations.Add(SaveIndex(pagePosts.ToArray(), "index", page, maxPage));
+                data.Posts = pagePosts.ToArray();
+                invalidations.Add(SaveIndex(data));
             }
 
             foreach(var hashtag in hashtags.Keys)
             {
-                page = 0;
+                var hashData = new HandlebarsPageData
+                {
+                    TotalPosts = hashtags[hashtag].Count,
+                    MaxPage = (int) Math.Ceiling((float) hashtags[hashtag].Count / _postsPerPage) - 1,
+                    PageNum = 0,
+                    Prefix = hashtag,
+                    RecentTags = recentHashtags,
+                    PopularTags = popularHashtags != null
+                        ? popularHashtags.OrderByDescending(t => t.Value).Select(t => t.Key).ToArray()
+                        : null
+                };
                 pagePosts.Clear();
-                maxPage = (int) Math.Ceiling((float) hashtags[hashtag].Count / _postsPerPage) - 1;
                 foreach(var post in hashtags[hashtag])
                 {
                     pagePosts.Add(post);
                     if(pagePosts.Count == _postsPerPage)
                     {
-                        invalidations.Add(SaveIndex(pagePosts.ToArray(), hashtag, page++, maxPage));
+                        hashData.Posts = pagePosts.ToArray();
+                        invalidations.Add(SaveIndex(hashData));
+                        hashData.PageNum += 1;
                         pagePosts.Clear();
                     }
                 }
                 if(pagePosts.Count > 0)
                 {
-                    invalidations.Add(SaveIndex(pagePosts.ToArray(), hashtag, page, maxPage));
+                    hashData.Posts = pagePosts.ToArray();
+                    invalidations.Add(SaveIndex(hashData));
                 }
             }
 
