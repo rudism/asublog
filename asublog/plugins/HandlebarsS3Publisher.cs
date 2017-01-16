@@ -309,7 +309,7 @@ namespace Asublog.Plugins
 
             posts.Reset();
 
-            var invalidations = new List<string>();
+            var invalidations = new List<string> {"/"};
 
             var pagePosts = new List<Post>();
             var hashtags = new Dictionary<string, List<Post>>();
