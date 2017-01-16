@@ -93,6 +93,9 @@ img.avatar {
   width: 48px;
   height: 48px;
 }
+img.avatar-large {
+  width: 100%;
+}
 
 .postnav, .caption {
   font-size: 120%;
