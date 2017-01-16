@@ -17,10 +17,45 @@ namespace Asublog.Plugins
     using HandlebarsDotNet;
     using Core;
 
+    public class ExtendedPost : Post
+    {
+        public ExtendedPost(Post post)
+        {
+            Id = post.Id;
+            Created = post.Created;
+            Content = post.Content;
+            Source = post.Source;
+            Processed = post.Processed;
+            Attachments = post.Attachments;
+        }
+
+        public new Attachment[] Attachments { get; set; }
+
+        public bool HasImage
+        {
+            get { return Attachments.Any(a => a.Type == "image"); }
+        }
+
+        public Attachment Image
+        {
+            get { return Attachments.FirstOrDefault(a => a.Type == "image"); }
+        }
+
+        public bool HasTweet
+        {
+            get { return Attachments.Any(a => a.Type == "tweet"); }
+        }
+
+        public Attachment Tweet
+        {
+            get { return Attachments.FirstOrDefault(a => a.Type == "tweet"); }
+        }
+    }
+
     public class HandlebarsPageData
     {
-        public IEnumerable<Post> Posts { get; set; }
-        public Post Post { get; set; }
+        public IEnumerable<ExtendedPost> Posts { get; set; }
+        public ExtendedPost Post { get; set; }
         public int TotalPosts { get; set; }
         public string TotalPostsFormatted
         {
@@ -266,7 +301,7 @@ namespace Asublog.Plugins
             return uploaded;
         }
 
-        public void Hashtagify(Dictionary<string, List<Post>> hashtags, Post post)
+        public void Hashtagify(Dictionary<string, List<ExtendedPost>> hashtags, ExtendedPost post)
         {
             Log.Debug(string.Format("Looking for hashtags in post {0}", post.Id), post);
             var matches = _hashtags.Matches(post.Content);
@@ -275,7 +310,7 @@ namespace Asublog.Plugins
                 var hashtag = match.Value.ToLower();
                 Log.Debug(string.Format("Found hashtag {0} in post {1}", hashtag, post.Id));
                 if(!hashtags.ContainsKey(hashtag))
-                    hashtags.Add(hashtag, new List<Post>());
+                    hashtags.Add(hashtag, new List<ExtendedPost>());
                 if(!hashtags[hashtag].Contains(post))
                     hashtags[hashtag].Add(post);
 
@@ -311,8 +346,8 @@ namespace Asublog.Plugins
 
             var invalidations = new List<string> {"/"};
 
-            var pagePosts = new List<Post>();
-            var hashtags = new Dictionary<string, List<Post>>();
+            var pagePosts = new List<ExtendedPost>();
+            var hashtags = new Dictionary<string, List<ExtendedPost>>();
             var data = new HandlebarsPageData
             {
                 TotalPosts = count,
@@ -326,7 +361,7 @@ namespace Asublog.Plugins
             };
             while(posts.MoveNext())
             {
-                var clone = (Post) posts.Current.Clone();
+                var clone = new ExtendedPost((Post) posts.Current.Clone());
                 if(Config["hashtags"] == "true")
                     Hashtagify(hashtags, clone);
 

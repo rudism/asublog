@@ -2,6 +2,7 @@ namespace Asublog.Plugins
 {
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -28,9 +29,11 @@ namespace Asublog.Plugins
 
         public LilurlProcessor() : base("lilurlProcessor", "0.5") { }
 
-        public override void Process(Post post)
+        private string Process(string content)
         {
-            var urls = _urls.Matches(post.Content);
+            var processed = content;
+
+            var urls = _urls.Matches(content);
             foreach(Match match in urls)
             {
                 var url = match.Value;
@@ -60,8 +63,8 @@ namespace Asublog.Plugins
                     using(var resp = (HttpWebResponse) req.GetResponse())
                     {
                         var sr = new StreamReader(resp.GetResponseStream());
-                        var content = sr.ReadToEnd();
-                        var lilmatch = _lilok.Match(content);
+                        var lilcontent = sr.ReadToEnd();
+                        var lilmatch = _lilok.Match(lilcontent);
                         if(lilmatch.Success)
                         {
                             newurl = lilmatch.Groups["lilurl"].Value;
@@ -70,7 +73,7 @@ namespace Asublog.Plugins
                         }
                         else
                         {
-                            lilmatch = _lilerr.Match(content);
+                            lilmatch = _lilerr.Match(lilcontent);
                             if(lilmatch.Success)
                             {
                                 var msg = lilmatch.Groups["msg"].Value;
@@ -85,8 +88,18 @@ namespace Asublog.Plugins
                 }
                 if(!string.IsNullOrEmpty(newurl))
                 {
-                    post.Content = post.Content.Replace(match.Value, newurl);
+                    processed = processed.Replace(match.Value, newurl);
                 }
+            }
+            return processed;
+        }
+
+        public override void Process(Post post)
+        {
+            post.Content = Process(post.Content);
+            foreach(var attachment in post.Attachments.Where(a => a.ShouldProcess))
+            {
+                attachment.Content = Process(attachment.Content);
             }
         }
     }

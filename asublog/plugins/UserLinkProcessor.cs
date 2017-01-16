@@ -1,5 +1,6 @@
 namespace Asublog.Plugins
 {
+    using System.Linq;
     using System.Text.RegularExpressions;
     using Core;
 
@@ -10,11 +11,13 @@ namespace Asublog.Plugins
 
         public UserLinkProcessor() : base("userLinkProcessor", "0.5") { }
 
-        public override void Process(Post post)
+        private string Process(string content)
         {
             var autoTwitter = Config["_autoTwitter"] == "true";
 
-            var matches = _userLinks.Matches(post.Content);
+            var processed = content;
+
+            var matches = _userLinks.Matches(content);
             foreach(Match match in matches)
             {
                 var handle = match.Value;
@@ -27,9 +30,20 @@ namespace Asublog.Plugins
 
                 if(link != null)
                 {
-                    post.Content = post.Content.Replace(handle,
+                    processed = processed.Replace(handle,
                         string.Format("<a href='{0}'>{1}</a>", link, handle));
                 }
+            }
+
+            return processed;
+        }
+
+        public override void Process(Post post)
+        {
+            post.Content = Process(post.Content);
+            foreach(var attachment in post.Attachments.Where(a => a.ShouldProcess))
+            {
+                attachment.Content = Process(attachment.Content);
             }
         }
     }

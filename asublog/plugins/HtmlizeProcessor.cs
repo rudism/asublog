@@ -1,5 +1,6 @@
 namespace Asublog.Plugins
 {
+    using System.Linq;
     using System.Text.RegularExpressions;
     using Core;
 
@@ -22,11 +23,11 @@ namespace Asublog.Plugins
 
         public HtmlizeProcessor() : base("htmlizeProcessor", "0.5") { }
 
-        public override void Process(Post post)
+        private string Process(string content)
         {
-            Log.Debug("Htmlizing post");
-            // hyperlink urls
-            var urls = _urls.Matches(post.Content);
+            string processed = content;
+
+            var urls = _urls.Matches(content);
             foreach(Match match in urls)
             {
                 var url = match.Value;
@@ -36,14 +37,26 @@ namespace Asublog.Plugins
                 }
                 var noproto = _excess.Replace(url, string.Empty);
 
-                post.Content = post.Content.Replace(match.Value,
+                processed = processed.Replace(match.Value,
                     string.Format("<a href='{0}'>{1}</a>", url, noproto));
             }
 
             // line breaks
             if(Config["allowNewlines"] == "true")
             {
-                post.Content = _newlines.Replace(post.Content, "<br>");
+                processed = _newlines.Replace(processed, "<br>");
+            }
+
+            return processed;
+        }
+
+        public override void Process(Post post)
+        {
+            Log.Debug("Htmlizing post");
+            post.Content = Process(post.Content);
+            foreach(var attachment in post.Attachments.Where(a => a.ShouldProcess))
+            {
+                attachment.Content = Process(attachment.Content);
             }
         }
     }

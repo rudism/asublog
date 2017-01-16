@@ -1,6 +1,7 @@
 namespace Asublog.Plugins
 {
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Text.RegularExpressions;
     using Core;
@@ -17,7 +18,7 @@ namespace Asublog.Plugins
 
         public ImageProcessor() : base("imageProcessor", "0.5") { }
 
-        public override void Process(Post post)
+        public void Process(string content, Post post)
         {
             // handle shared dropbox photos
             var urls = _dropbox.Matches(post.Content);
@@ -29,13 +30,12 @@ namespace Asublog.Plugins
                 {
                     Log.Debug(string.Format("Checking dropbox url for image {0}", url));
                     var req = (HttpWebRequest) WebRequest.Create(url);
-                    req.AllowWriteStreamBuffering = false;
                     using(var resp = req.GetResponse())
                     {
                         var sr = new StreamReader(resp.GetResponseStream());
-                        var content = sr.ReadToEnd();
+                        var dbcontent = sr.ReadToEnd();
 
-                        var imgmatch = _imgsrc.Match(content);
+                        var imgmatch = _imgsrc.Match(dbcontent);
                         if(imgmatch.Success)
                         {
                             imgurl = Regex.Unescape(imgmatch.Groups["src"].Value);
@@ -52,6 +52,15 @@ namespace Asublog.Plugins
                 {
                     post.Attach("image", url, imgurl);
                 }
+            }
+        }
+
+        public override void Process(Post post)
+        {
+            Process(post.Content, post);
+            foreach(var attachment in post.Attachments.Where(a => a.ShouldProcess))
+            {
+                Process(attachment.Content, post);
             }
         }
     }

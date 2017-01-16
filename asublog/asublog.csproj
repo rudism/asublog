@@ -83,6 +83,7 @@
     <Compile Include="plugins\AutoPoster.cs" />
     <Compile Include="plugins\lib\JSONParser.cs" />
     <Compile Include="plugins\UserLinkProcessor.cs" />
+    <Compile Include="plugins\RetweetProcessor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yml">

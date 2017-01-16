@@ -9,6 +9,7 @@ namespace Asublog.Core
         public string Type { get; set; }
         public string Url { get; set; }
         public string Content { get; set; }
+        public bool ShouldProcess { get; set; }
     }
 
     public class Post : ICloneable
@@ -25,19 +26,15 @@ namespace Asublog.Core
         {
             get { return _attachments.ToArray(); }
         }
-        public Attachment Image
-        {
-            get { return _attachments.FirstOrDefault(a => a.Type == "image"); }
-        }
-        public bool HasImage { get { return Image != null; } }
 
-        public void Attach(string type, string url, string content)
+        public void Attach(string type, string url, string content, bool shouldProcess = false)
         {
             _attachments.Add(new Attachment
             {
                 Type = type,
                 Url = url,
-                Content = content
+                Content = content,
+                ShouldProcess = shouldProcess
             });
         }
 
