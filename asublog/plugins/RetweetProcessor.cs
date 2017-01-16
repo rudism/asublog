@@ -24,7 +24,7 @@ namespace Asublog.Plugins
             var urls = _twitter.Matches(post.Content);
             foreach(Match match in urls)
             {
-                var url = match.Value;
+                var url = match.Value.Replace("//mobile.", "//");
                 var user = match.Groups["user"].Value;
                 var id = match.Groups["id"].Value;
 
@@ -72,8 +72,7 @@ namespace Asublog.Plugins
                 }
                 if(!string.IsNullOrEmpty(tweet))
                 {
-                    var nonMobileUrl = url.Replace("//mobile.", "//");
-                    post.Attach("tweet", nonMobileUrl, tweet, true);
+                    post.Attach("tweet", url, tweet, true);
                 }
                 if(!string.IsNullOrEmpty(image))
                 {
