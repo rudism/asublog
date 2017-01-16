@@ -13,7 +13,7 @@ namespace Asublog.Plugins
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex _ogdata =
-            new Regex(@"<meta\s+property\s*=\s*""og:(?<field>[a-zA-Z0-9_]+)""\s+content\s*=\s*""(?<content>[^""]+)""",
+            new Regex(@"<meta\s+property\s*=\s*""og:(?<field>[a-zA-Z0-9_:]+)""\s+content\s*=\s*""(?<content>[^""]+)""",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public RetweetProcessor() : base("retweetProcessor", "0.5") { }
@@ -62,7 +62,9 @@ namespace Asublog.Plugins
 
                             App.CacheSet(id, tweet);
 
-                            if(ogdata.ContainsKey("image"))
+                            if(ogdata.ContainsKey("image")
+                                && ogdata.ContainsKey("image:user_generated")
+                                && ogdata["image:user_generated"] == "true")
                             {
                                 image = ogdata["image"];
                                 App.CacheSet(imgKey, image);
