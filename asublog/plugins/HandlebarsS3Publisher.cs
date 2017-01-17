@@ -193,7 +193,7 @@ namespace Asublog.Plugins
             {
                 var fpath = Path.Combine(path, file);
                 var key = string.Format("{0}/{1}", dir, Path.GetFileName(fpath));
-                if(_client.UploadFile(_bucket, fpath, key)) uploaded.Add(key);
+                if(_client.UploadFile(_bucket, fpath, key)) uploaded.Add(string.Format("/{0}", key));
             }
             var folders = Directory.GetDirectories(path);
             foreach(var folder in folders)
