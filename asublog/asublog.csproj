@@ -32,6 +32,7 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.Csharp" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="Mono.Posix" />
     <Reference Include="YamlDotNet">
@@ -86,6 +87,7 @@
     <Compile Include="plugins\RetweetProcessor.cs" />
     <Compile Include="plugins\TcpPoster.cs" />
     <Compile Include="plugins\lib\S3Util.cs" />
+    <Compile Include="plugins\lib\PostUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yml">

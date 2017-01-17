@@ -13,6 +13,19 @@ namespace Asublog.Core
 
         public PluginLoader(YamlMappingNode config, ILogger log, IAsublog app)
         {
+            // load global config
+            Dictionary<string, string> globalDict = null;
+            var globalKey = new YamlScalarNode("global");
+            if(config.Children.ContainsKey(globalKey))
+            {
+                globalDict = new Dictionary<string, string>();
+                var globalConfig = (YamlMappingNode) config.Children[globalKey];
+                foreach(YamlScalarNode key in globalConfig.Children.Keys)
+                {
+                    globalDict.Add(key.Value, ((YamlScalarNode) globalConfig.Children[key]).Value);
+                }
+            }
+
             _plugins = new List<Plugin>();
             var plugins = (YamlSequenceNode) config.Children[new YamlScalarNode("plugins")];
             foreach(YamlScalarNode pluginName in plugins)
@@ -24,13 +37,18 @@ namespace Asublog.Core
                     throw new Exception(string.Format("Plugin type {0} could not be found.", pluginName.Value));
                 }
 
-                Dictionary<string, string> plugDict = null;
+                var plugDict = globalDict != null
+                    ? new Dictionary<string, string>(globalDict)
+                    : null;
+
                 var plugConfigKey = new YamlScalarNode(string.Format("{0}Config", pluginName.Value));
                 if(config.Children.ContainsKey(plugConfigKey))
                 {
                     var plugConfig = (YamlMappingNode) config.Children[plugConfigKey];
 
-                    plugDict = new Dictionary<string, string>();
+                    if(plugDict == null)
+                        plugDict = new Dictionary<string, string>();
+
                     foreach(YamlScalarNode key in plugConfig.Children.Keys)
                     {
                         plugDict.Add(key.Value, ((YamlScalarNode) plugConfig.Children[key]).Value);

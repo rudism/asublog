@@ -91,6 +91,7 @@ namespace Asublog.Plugins
 
         public bool UploadFile(string bucket, string path, string key)
         {
+            Log.Debug(string.Format("Uploading {0} to s3://{1}/{2}", path, bucket, key));
             string md5;
             using(var md5er = MD5.Create())
             {

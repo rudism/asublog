@@ -31,54 +31,35 @@ namespace Asublog.Plugins
                 Log.Debug(string.Format("Found twitter url {0}", url));
 
                 var tweet = App.CacheGet(id);
-                var imgKey = string.Format("img-{0}", id);
-                var image = App.CacheGet(imgKey);
 
                 if(string.IsNullOrEmpty(tweet))
                 {
-                    var req = (HttpWebRequest) WebRequest.Create(url);
-                    using(var resp = req.GetResponse())
+                    var content = PostUtils.GetPageContent(Log, url);
+
+                    var ogdata = new Dictionary<string, string>();
+                    var ogs = _ogdata.Matches(content);
+                    foreach(Match og in ogs)
                     {
-                        var sr = new StreamReader(resp.GetResponseStream());
-                        var content = sr.ReadToEnd();
+                        var ogfield = og.Groups["field"].Value;
+                        var ogcontent = og.Groups["content"].Value;
+                        ogdata.Add(ogfield, ogcontent);
+                    }
 
-                        var ogdata = new Dictionary<string, string>();
-                        var ogs = _ogdata.Matches(content);
-                        foreach(Match og in ogs)
-                        {
-                            var ogfield = og.Groups["field"].Value;
-                            var ogcontent = og.Groups["content"].Value;
-                            ogdata.Add(ogfield, ogcontent);
-                        }
+                    Log.Debug("Extracted tweet data", ogdata);
 
-                        Log.Debug("Extracted tweet data", ogdata);
+                    if(ogdata.ContainsKey("type")
+                        && ogdata["type"] == "article"
+                        && ogdata.ContainsKey("description"))
+                    {
+                        tweet = string.Format("{0} - @{1}",
+                            Regex.Unescape(ogdata["description"]), user);
 
-                        if(ogdata.ContainsKey("type")
-                            && ogdata["type"] == "article"
-                            && ogdata.ContainsKey("description"))
-                        {
-                            tweet = string.Format("{0} - @{1}",
-                                Regex.Unescape(ogdata["description"]), user);
-
-                            App.CacheSet(id, tweet);
-
-                            if(ogdata.ContainsKey("image")
-                                && ogdata.ContainsKey("image:user_generated")
-                                && ogdata["image:user_generated"] == "true")
-                            {
-                                image = ogdata["image"];
-                                App.CacheSet(imgKey, image);
-                            }
-                        }
+                        App.CacheSet(id, tweet);
                     }
                 }
                 if(!string.IsNullOrEmpty(tweet))
                 {
                     post.Attach("tweet", url, tweet, true);
-                }
-                if(!string.IsNullOrEmpty(image))
-                {
-                    post.Attach("image", url, image);
                 }
             }
         }

@@ -6,18 +6,6 @@ namespace Asublog.Plugins
 
     public class HtmlizeProcessor : ProcessingPlugin
     {
-        private static readonly Regex _urls =
-            new Regex(@"(?<=(^|\s))(www\.|https?://)([^\s]+)(?=(\s|\.(\s|$)|,\s|$))",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        private static readonly Regex _hasproto =
-            new Regex(@"^https?://",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        private static readonly Regex _excess =
-            new Regex(@"^(https?://)?(www\.)?",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         private static readonly Regex _newlines =
             new Regex(@"(\r?\n)", RegexOptions.Compiled);
 
@@ -27,15 +15,11 @@ namespace Asublog.Plugins
         {
             string processed = content;
 
-            var urls = _urls.Matches(content);
+            var urls = PostUtils.UrlRegex.Matches(content);
             foreach(Match match in urls)
             {
-                var url = match.Value;
-                if(!_hasproto.IsMatch(url))
-                {
-                    url = string.Format("http://{0}", url);
-                }
-                var noproto = _excess.Replace(url, string.Empty);
+                var url = PostUtils.NormalizeUrl(match.Value);
+                var noproto = PostUtils.SanitizeUrl(match.Value);
 
                 processed = processed.Replace(match.Value,
                     string.Format("<a href='{0}'>{1}</a>", url, noproto));

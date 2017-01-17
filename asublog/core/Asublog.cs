@@ -131,6 +131,7 @@ namespace Asublog.Core
             {
                 Log.Error(string.Format("Error while flushing plugin {0}", _savingPlugin.Name), ex);
             }
+            PostUtils.ResetPageContentStore();
             Publish();
         }
 
