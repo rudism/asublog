@@ -109,7 +109,7 @@ namespace Asublog.Plugins
         private int _postsPerPage;
         private AmazonS3Client _client;
         private string _bucket;
-        private static readonly Regex _hashtags = new Regex(@"(?<=(\s|^)#)(?<hashtag>[a-zA-Z0-9_]+)(?=(\s|$))", RegexOptions.Compiled);
+        private static readonly Regex _hashtags = new Regex(@"(?<=(\s|^)#)(?<hashtag>[a-zA-Z0-9_]+)(?=([^a-zA-Z0-9_]|$))", RegexOptions.Compiled);
 
         public HandlebarsS3Publisher() : base("handlebarsS3Publisher", "0.5") { }
 
