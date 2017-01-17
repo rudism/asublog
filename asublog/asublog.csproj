@@ -85,6 +85,7 @@
     <Compile Include="plugins\UserLinkProcessor.cs" />
     <Compile Include="plugins\RetweetProcessor.cs" />
     <Compile Include="plugins\TcpPoster.cs" />
+    <Compile Include="plugins\lib\S3Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yml">

@@ -5,15 +5,7 @@ namespace Asublog.Plugins
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Text.RegularExpressions;
-    using Amazon;
-    using Amazon.CloudFront;
-    using Amazon.CloudFront.Model;
-    using Amazon.S3;
-    using Amazon.S3.Model;
-    using Amazon.S3.Transfer;
     using HandlebarsDotNet;
     using Core;
 
@@ -107,7 +99,7 @@ namespace Asublog.Plugins
         private Func<object, string> _index;
         private Func<object, string> _post;
         private int _postsPerPage;
-        private AmazonS3Client _client;
+        private S3Util _client;
         private string _bucket;
         private static readonly Regex _hashtags = new Regex(@"(?<=(\s|^)#)(?<hashtag>[a-zA-Z0-9_]+)(?=(\s|$))", RegexOptions.Compiled);
 
@@ -164,8 +156,7 @@ namespace Asublog.Plugins
                 Log.Info("Post template not found, post pages will not be generated.");
             }
 
-            _client = new AmazonS3Client(Config["awsKey"], Config["awsSecret"],
-                RegionEndpoint.GetBySystemName(Config["awsRegion"]));
+            _client = new S3Util(Config["awsKey"], Config["awsSecret"], Config["awsRegion"]) { Log = Log };
         }
 
         private string SaveIndex(HandlebarsPageData data)
@@ -175,7 +166,9 @@ namespace Asublog.Plugins
             var content = _index(data);
 
             Log.Debug(string.Format("Rendered index {0}", fname));
-            return UploadContent(fname, content);
+            return _client.UploadContent(_bucket, fname, content)
+                ? string.Format("/{0}", fname)
+                : null;
         }
 
         private string SavePost(HandlebarsPageData data)
@@ -186,119 +179,9 @@ namespace Asublog.Plugins
             var content = _post(data);
 
             Log.Debug(string.Format("Rendered post {0}", fname));
-            return UploadContent(fname, content);
-        }
-
-        private string Md5ToStr(byte[] hash)
-        {
-            var sb = new StringBuilder();
-            for(var i = 0; i < hash.Length; i++)
-            {
-                sb.Append(hash[i].ToString("x2"));
-            }
-            return sb.ToString();
-        }
-
-        private string GetETag(string key)
-        {
-            try
-            {
-                var headReq = new GetObjectMetadataRequest
-                {
-                    BucketName = _bucket,
-                    Key = key
-                };
-
-                var head = _client.GetObjectMetadata(headReq);
-                return head.ETag.Trim(new[] {'"'});
-            }
-            catch(AmazonS3Exception ex)
-            {
-                if(ex.StatusCode != HttpStatusCode.NotFound) throw;
-            }
-            return null;
-        }
-
-        private string UploadContent(string fname, string content)
-        {
-            string md5;
-            using(var md5er = MD5.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(content);
-                var hash = md5er.ComputeHash(bytes);
-                md5 = Md5ToStr(hash);
-            }
-
-            var etag = GetETag(fname);
-
-            Log.Debug(string.Format("Content md5 {0}, S3 etag {1}", md5, etag));
-            if(!md5.Equals(etag, StringComparison.OrdinalIgnoreCase))
-            {
-                var putReq = new PutObjectRequest
-                {
-                    BucketName = _bucket,
-                    Key = fname,
-                    ContentBody = content
-                };
-
-                var resp = _client.PutObject(putReq);
-                if(resp.HttpStatusCode == HttpStatusCode.OK)
-                {
-                    Log.Info(string.Format("Uploaded s3://{0}/{1}", _bucket, fname));
-                }
-                else
-                {
-                    Log.Error(string.Format("Got unexpected result when uploading s3://{0}/{1}: {2}", _bucket, fname, resp.HttpStatusCode));
-                }
-                return string.Format("/{0}", fname);
-            }
-            else
-            {
-                Log.Debug(string.Format("Skipping s3://{0}/{1} (file unchanged)", _bucket, fname));
-            }
-            return null;
-        }
-
-        private string UploadFile(string path, string dir)
-        {
-            string md5;
-            using(var md5er = MD5.Create())
-            {
-                using(var stream = File.OpenRead(path))
-                {
-                    var hash = md5er.ComputeHash(stream);
-                    md5 = Md5ToStr(hash);
-                }
-            }
-
-            var key = string.Format("{0}/{1}", dir, Path.GetFileName(path));
-            var etag = GetETag(key);
-
-            if(!md5.Equals(etag, StringComparison.OrdinalIgnoreCase))
-            {
-                var putReq = new PutObjectRequest
-                {
-                    BucketName = _bucket,
-                    Key = key,
-                    FilePath = path
-                };
-
-                var resp = _client.PutObject(putReq);
-                if(resp.HttpStatusCode == HttpStatusCode.OK)
-                {
-                    Log.Info(string.Format("Uploaded s3://{0}/{1}", _bucket, key));
-                    return string.Format("/{0}", key);
-                }
-                else
-                {
-                    Log.Error(string.Format("Got unexpected result when uploading s3://{0}/{1}: {2}", _bucket, key, resp.HttpStatusCode));
-                }
-            }
-            else
-            {
-                Log.Debug(string.Format("Skipping s3://{0}/{1} (file unchanged)", _bucket, key));
-            }
-            return null;
+            return _client.UploadContent(_bucket, fname, content)
+                ? string.Format("/{0}", fname)
+                : null;
         }
 
         private List<string> UploadDirectory(string path, string dir)
@@ -309,9 +192,8 @@ namespace Asublog.Plugins
             foreach(var file in files)
             {
                 var fpath = Path.Combine(path, file);
-                string key;
-                if(!string.IsNullOrEmpty((key = UploadFile(fpath, dir))))
-                    uploaded.Add(key);
+                var key = string.Format("{0}/{1}", dir, Path.GetFileName(fpath));
+                if(_client.UploadFile(_bucket, fpath, key)) uploaded.Add(key);
             }
             var folders = Directory.GetDirectories(path);
             foreach(var folder in folders)
@@ -442,38 +324,13 @@ namespace Asublog.Plugins
 
             invalidPaths.AddRange(UploadDirectory(_assetPath, "assets"));
 
+            Log.Debug("S3 upload complete");
             if(invalidPaths.Count > 0)
             {
                 var distId = Config["cloudfrontDistId"];
                 if(distId != null)
                 {
-                    var client = new AmazonCloudFrontClient(Config["awsKey"], Config["awsSecret"],
-                        RegionEndpoint.GetBySystemName(Config["awsRegion"]));
-
-                    var invReq = new CreateInvalidationRequest
-                    {
-                        DistributionId = distId,
-                        InvalidationBatch = new InvalidationBatch
-                        {
-                            Paths = new Paths
-                            {
-                                Quantity = invalidPaths.Count,
-                                Items = invalidPaths
-                            },
-                            CallerReference = DateTime.Now.Ticks.ToString()
-                        }
-                    };
-
-                    var resp = client.CreateInvalidation(invReq);
-                    if(resp.HttpStatusCode == HttpStatusCode.Created)
-                    {
-                        Log.Info(string.Format("Created invalidation for Cloudfront Distribution {0}", distId));
-                        Log.Debug("Invalidated Paths", invalidPaths);
-                    }
-                    else
-                    {
-                        Log.Error(string.Format("Got unexpected result creating invalidation for Cloudfront Distribution {0}: {1}", distId, resp.HttpStatusCode));
-                    }
+                    _client.InvalidateCloudFrontDistribution(distId, invalidPaths);
                 }
             }
         }
