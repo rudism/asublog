@@ -143,6 +143,7 @@ namespace Asublog.Plugins
 
         public void InvalidateCloudFrontDistribution(string distId, List<string> invalidPaths)
         {
+            Log.Debug("Invalidating paths", invalidPaths);
             var invReq = new CreateInvalidationRequest
             {
                 DistributionId = distId,
@@ -161,7 +162,6 @@ namespace Asublog.Plugins
             if(resp.HttpStatusCode == HttpStatusCode.Created)
             {
                 Log.Info(string.Format("Created invalidation for Cloudfront Distribution {0}", distId));
-                Log.Debug("Invalidated Paths", invalidPaths);
             }
             else
             {
