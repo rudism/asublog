@@ -9,11 +9,12 @@ A simple framework for running a self-hosted single-user microblog. To see an ex
 - as&micro;Blog will connect to your XMPP server and convert any chat messages you send to it into posts
 - as&micro;Blog will monitor your [Pinboard.in](https://pinboard.in) feed for a specific tag and turn those shared links into posts
 - send new posts to a local TCP port on the asu&micro;Blog server
+  - can be used for IPC between as&micro;Blog and other processes (web servers, scripts, etc.)
 
 ### Media Extraction & Processing
 
-- Shared dropbox photo urls will embed the photo in the post
-- Twitter status urls will quote the linked tweet in your post and embed its image (if it has one)
+- OpenGraph image metadata retrieved from linked urls, resized if necessary, and embedded in posts
+- Twitter status urls will quote the linked tweet in your post
 - Convert urls into links
 - Shorten links using a [lilurl](http://lilurl.sourceforge.net) domain
 - Auto link `#hashtags`

@@ -11,6 +11,14 @@ plugins:
   - userLinkProcessor
   - handlebarsS3Publisher
 
+global:
+  siteUrl: http://mymicroblog.com
+  bucket: mysweetmicroblog.com
+  awsKey: MYACCESSKEYID
+  awsSecret: MYSECRETACCESSKEY
+  awsRegion: us-east-1
+  cloudfrontDistId: MYCLOUDFRONTDISTID
+
 xmppPosterConfig:
   host: myxmppserver.com
   jid: blogbot@myxmppserver.com
@@ -32,14 +40,8 @@ sqliteSaverConfig:
 handlebarsS3PublisherConfig:
   postsPerPage: 20
   theme: asutwit
-  bucket: mysweetmicroblog.com
-  awsKey: MYACCESSKEYID
-  awsSecret: MYSECRETACCESSKEY
-  awsRegion: us-east-1
-  cloudfrontDistId: MYCLOUDFRONTDISTID
   hashtags: true
   tz: America/Chicago
-  siteUrl: http://mymicroblog.com
   siteName: as&micro;Blog
   siteCreated: 1/15/2017
   userName: Author
@@ -47,6 +49,13 @@ handlebarsS3PublisherConfig:
   userLinkUrl: https://github.com/rudism/asublog
   siteDescription: as&micro;Blog is the Antisocial Microblogging framework, a self-hosted static-site microblog generator.
   location: Earth, Sol, Milky Way
+
+imageProcessorConfig:
+  tempDir: /tmp
+  s3path: attachments
+  maxWidth: 700
+  minWidth: 200
+  minHeight: 300
 
 lilurlProcessorConfig:
   url: mylilurl.com
