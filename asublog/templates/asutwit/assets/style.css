@@ -78,15 +78,11 @@ div.stats>h5 {
 
 .post-media>a {
   display: block;
+  text-indent: -9999px;
   height: 200px;
   background-size: 100%;
   background-position: center;
   overflow: hidden;
-}
-.post-media>a>img {
-  position: relative;
-  width: 100%;
-  top: -33%;
 }
 
 img.avatar {

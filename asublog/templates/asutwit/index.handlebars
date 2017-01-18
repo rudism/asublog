@@ -96,9 +96,7 @@
             {{#each Posts}}
             {{#if HasImage}}
             <div class='post-media'>
-              <a href='post-{{Id}}.html'>
-                <img class='img-responsive' onerror='$(this).parent().parent().hide()' src='{{Image.Content}}'>
-              </a>
+              <a href='post-{{Id}}.html' style="background-image: url('{{Image.Content}}');">Preview</a>
             </div>
             {{/if}}
             <div class='panel-body'>
