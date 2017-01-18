@@ -76,6 +76,9 @@ div.stats>h5 {
   font-size: 1em;
 }
 
+.post-media {
+  border-bottom: 1px solid #dddddd;
+}
 .post-media>a {
   display: block;
   text-indent: -9999px;
