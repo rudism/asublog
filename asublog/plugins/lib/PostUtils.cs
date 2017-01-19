@@ -54,6 +54,7 @@ namespace Asublog.Plugins
                 {
                     log.Debug(string.Format("Downloading page content at {0}", url));
                     var req = (HttpWebRequest) WebRequest.Create(url);
+                    req.UserAgent = @"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1";
                     using(var resp = (HttpWebResponse) req.GetResponse())
                     {
                         using(var sr = new StreamReader(resp.GetResponseStream()))
