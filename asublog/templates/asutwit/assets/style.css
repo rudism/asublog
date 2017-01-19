@@ -33,6 +33,7 @@ body {
   font-size: 150%;
   font-weight: bold;
 }
+
 div.stats {
   margin-right: 1em;
 }
@@ -63,6 +64,9 @@ div.stats>h5 {
   text-decoration: none;
 }
 
+.panel-posts {
+  overflow: hidden;
+}
 .panel-posts .media-heading>date {
   color: #aab8c2;
   font-size: 90%;

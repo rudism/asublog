@@ -1,0 +1,55 @@
+        <!-- RIGHT COLUMN LINKS/TRENDS -->
+
+        <div class='col-sm-3'>
+          <div class='panel panel-default panel-custom'>
+            <div class='panel-heading'>
+              <h3 class='panel-title'>You may also like</h3>
+            </div>
+            <div class='panel-body'>
+              <ul class='list-unstyled'>
+                <li><span class='glyphicon glyphicon-link'></span> <a href='https://codeword.xyz/'>The Code Word</a></li>
+                <li><span class='glyphicon glyphicon-link'></span> <a href='https://norfolkwinters.com/'>Norfolk Winters</a></li>
+                <li><span class='glyphicon glyphicon-link'></span> <a href='https://clicksnshares.com/'>Clicks'n'Shares</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {{#if HasHashtags}}
+          <div class='panel panel-default panel-custom'>
+            <div class='panel-heading'>
+              <h3 class='panel-title'>Recent Tags</h3>
+            </div>
+            <div class='panel-body'>
+              <ul class='list-unstyled'>
+                {{#each RecentTags}}
+                <li><span class='glyphicon glyphicon-tag'></span> <a href='{{this}}.html'>{{this}}</a></li>
+                {{/each}}
+              </ul>
+            </div>
+          </div>
+
+          <div class='panel panel-default panel-custom'>
+            <div class='panel-heading'>
+              <h3 class='panel-title'>Popular Tags</h3>
+            </div>
+            <div class='panel-body'>
+              <ul class='list-unstyled'>
+                {{#each PopularTags}}
+                <li><span class='glyphicon glyphicon-tag'></span> <a href='{{this}}.html'>{{this}}</a></li>
+                {{/each}}
+              </ul>
+            </div>
+          </div>
+          {{/if}}
+
+          <div class='panel panel-default panel-copyright'>
+            <div class='panel-body'>
+              <small>All content is copyright &copy; 2017 by {{{UserName}}}. All rights reserved.</small>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </body>
+</html>

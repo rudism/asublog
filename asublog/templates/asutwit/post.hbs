@@ -1,0 +1,55 @@
+{{> header}}
+
+        <!-- MIDDLE COLUMN POSTS -->
+
+        <div class='col-sm-6'>
+          <div class='panel panel-default panel-posts'>
+
+            <div class='panel-body'>
+              <div class='caption'>
+                Viewing a single post. <a href='/'>Click here</a> for all posts.
+              </div>
+            </div>
+
+            {{#with Post}}
+            {{#if HasImage}}
+            <img class='img-responsive img-postimage' onerror='$(this).hide()' src='{{Image.Content}}'>
+            {{/if}}
+            <div class='panel-body'>
+              <div class='media'>
+                <a class='media-left'><img class='media-object img-rounded avatar' src='assets/img/avatar48.png'></a>
+                <div class='media-body'>
+                  <h4 class='media-heading'>{{{UserName}}} <date>{{tz_created}}</date></h4>
+                  {{#if HasTweet}}
+                  <blockquote>{{{Tweet.Content}}}</blockquote>
+                  {{/if}}
+                  <p>{{{Content}}}</p>
+                  <div class='pull-left meta-link'>
+                    <a href='post-{{Id}}.html'>
+                      <span class='glyphicon glyphicon-link'></span>
+                      permalink
+                    </a>
+                  </div>
+                  {{#if HasImage}}
+                  <div class='pull-left meta-link'>
+                    <a href='{{Image.Url}}'>
+                      <span class='glyphicon glyphicon-paperclip'></span>
+                      image
+                    </a>
+                  </div>
+                  {{/if}}
+                  <div class='pull-left meta-link'>
+                    <span>
+                      <span class='glyphicon glyphicon-pushpin'></span>
+                      via {{Source}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {{/with}}
+
+          </div>
+        </div>
+
+{{> footer}}

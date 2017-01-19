@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang='en'>
+  <head>
+    <title>{{{SiteName}}}</title>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='shortcut icon' href='{{SiteUrl}}/assets/img/favicon.png' type='image/png'>
+    <meta property='og:title' content="{{{SiteName}}}">
+    <meta property='og:description' content="{{{SiteDescription}}}">
+    <meta property='og:image' content='{{SiteUrl}}/assets/img/avatar500.png'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.css'>
+    <link rel='stylesheet' href='assets/style.css'>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  </head>
+  <body>
+    <div class='navbar navbar-default navbar-static-top'>
+      <div class='container'>
+        <div class='navbar-header'>
+          <a class='navbar-brand' href='/'><span class='glyphicon glyphicon-edit'></span> {{{SiteName}}}</a>
+        </div>
+      </div>
+    </div>
+    <div class='banner'>
+      <img class='hidden-xs img-responsive' src='assets/img/banner.jpg'>
+    </div>
+    <div class='container'>
+      <div class='row'>
+
+        <!-- LEFT COLUMN AVATAR/ABOUT -->
+
+        <div class='col-sm-3'>
+          <div class='panel panel-default'>
+            <div class='panel-body'>
+              <a href='/'><img class='img-responsive img-rounded avatar-large' src='assets/img/avatar500.png'></a>
+              <div class='pull-left stats'>
+                <h5>
+                  <small>POSTS</small><br>
+                  <span>{{TotalPostsFormatted}}</span>
+                </h5>
+              </div>
+              <div class='pull-left stats'>
+                <h5>
+                  <small>CREATED</small><br>
+                  <span>{{{SiteCreated}}}</span>
+                </h5>
+              </div>
+              <div class='pull-left stats'>
+                <h5>
+                  <small>POWERED BY</small><br>
+                  <a href='https://github.com/rudism/asublog'>as&micro;Blog</a>
+                </h5>
+              </div>
+            </div>
+          </div>
+
+          <div class='panel panel-default panel-about'>
+            <div class='panel-heading'>
+              <h3 class='panel-title'>
+                {{{UserName}}}
+                <span class='verified glyphicon glyphicon-ok-sign'></span>
+              </h3>
+            </div>
+            <div class='panel-body'>
+              <p>{{{SiteDescription}}}</p>
+              <ul class='list-unstyled'>
+                <li><span class='glyphicon glyphicon-map-marker'></span> {{{Location}}}</li>
+                <li><span class='glyphicon glyphicon-link'></span> <a href='{{{UserLinkUrl}}}'>{{{UserLinkName}}}</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>

@@ -142,11 +142,31 @@ namespace Asublog.Plugins
             var themePath = Path.Combine(_basePath, theme);
             _assetPath = Path.Combine(themePath, "assets");
 
-            var index = Path.Combine(themePath, "index.handlebars");
+            var header = Path.Combine(themePath, "header.hbs");
+            if(File.Exists(header))
+            {
+                using(var reader = new StreamReader(File.OpenRead(header)))
+                {
+                    var template = Handlebars.Compile(reader);
+                    Handlebars.RegisterTemplate("header", template);
+                }
+            }
+
+            var footer = Path.Combine(themePath, "footer.hbs");
+            if(File.Exists(footer))
+            {
+                using(var reader = new StreamReader(File.OpenRead(footer)))
+                {
+                    var template = Handlebars.Compile(reader);
+                    Handlebars.RegisterTemplate("footer", template);
+                }
+            }
+
+            var index = Path.Combine(themePath, "index.hbs");
             if(!File.Exists(index)) throw new FileNotFoundException("Could not find index template", index);
             _index = Handlebars.Compile(File.ReadAllText(index));
 
-            var post = Path.Combine(themePath, "post.handlebars");
+            var post = Path.Combine(themePath, "post.hbs");
             if(File.Exists(post))
             {
                 _post = Handlebars.Compile(File.ReadAllText(post));
