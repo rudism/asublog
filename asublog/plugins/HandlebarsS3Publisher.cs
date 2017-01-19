@@ -279,9 +279,9 @@ namespace Asublog.Plugins
                 MaxPage = (int) Math.Ceiling((float) count / _postsPerPage) - 1,
                 PageNum = 0,
                 Prefix = "index",
-                RecentTags = recentHashtags,
+                RecentTags = recentHashtags.Take(10),
                 PopularTags = popularHashtags != null
-                    ? popularHashtags.OrderByDescending(t => t.Value).Select(t => t.Key).ToArray()
+                    ? popularHashtags.OrderByDescending(t => t.Value).Take(10).Select(t => t.Key).ToArray()
                     : null
             };
             while(posts.MoveNext())
@@ -316,9 +316,9 @@ namespace Asublog.Plugins
                     MaxPage = (int) Math.Ceiling((float) hashtags[hashtag].Count / _postsPerPage) - 1,
                     PageNum = 0,
                     Prefix = hashtag,
-                    RecentTags = recentHashtags,
+                    RecentTags = recentHashtags.Take(10),
                     PopularTags = popularHashtags != null
-                        ? popularHashtags.OrderByDescending(t => t.Value).Select(t => t.Key).ToArray()
+                        ? popularHashtags.OrderByDescending(t => t.Value).Take(10).Select(t => t.Key).ToArray()
                         : null
                 };
                 pagePosts.Clear();
