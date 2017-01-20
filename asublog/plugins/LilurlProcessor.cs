@@ -11,10 +11,6 @@ namespace Asublog.Plugins
 
     public class LilurlProcessor : ProcessingPlugin
     {
-        private static readonly Regex _urls =
-            new Regex(@"(?<=(^|\s))(www\.|https?://)([^\s]+)(?=(\s|$))",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         private static readonly Regex _lilerr =
             new Regex(@"<p class=""error"">(?<msg>[^<]+)</p>",
             RegexOptions.Compiled);
@@ -33,7 +29,7 @@ namespace Asublog.Plugins
         {
             var processed = content;
 
-            var urls = _urls.Matches(content);
+            var urls = PostUtils.UrlRegex.Matches(content);
             foreach(Match match in urls)
             {
                 var url = match.Value;

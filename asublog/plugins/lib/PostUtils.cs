@@ -13,7 +13,7 @@ namespace Asublog.Plugins
         private static readonly object _pageLock = new object();
 
         public static readonly Regex UrlRegex =
-            new Regex(@"(?<=(^|\s))(www\.|https?://)([^\s]+)(?=(\s|\.(\s|$)|,\s|$))",
+            new Regex(@"(?<=(^|\s))(www\.|https?://)([^\s]+?)(?=([""”.,:;]?(\s|$)))",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex _hasproto =

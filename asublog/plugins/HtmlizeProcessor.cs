@@ -1,5 +1,6 @@
 namespace Asublog.Plugins
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Text.RegularExpressions;
     using Core;
@@ -16,13 +17,19 @@ namespace Asublog.Plugins
             string processed = content;
 
             var urls = PostUtils.UrlRegex.Matches(content);
+            var linked = new List<string>();
             foreach(Match match in urls)
             {
                 var url = PostUtils.NormalizeUrl(match.Value);
-                var noproto = PostUtils.SanitizeUrl(match.Value);
+                if(!linked.Contains(url))
+                {
+                    var noproto = PostUtils.SanitizeUrl(match.Value);
 
-                processed = processed.Replace(match.Value,
-                    string.Format("<a href='{0}'>{1}</a>", url, noproto));
+                    processed = processed.Replace(match.Value,
+                        string.Format("<a href='{0}'>{1}</a>", url, noproto));
+
+                    linked.Add(url);
+                }
             }
 
             // line breaks
