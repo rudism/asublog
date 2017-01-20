@@ -93,6 +93,7 @@ div.stats>h5 {
   height: 200px;
   background-size: 100%;
   background-position: center;
+  background-repeat: no-repeat;
   overflow: hidden;
 }
 
