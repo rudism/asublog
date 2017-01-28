@@ -32,6 +32,17 @@ namespace Asublog.Plugins
                 : string.Format("http://{0}", url);
         }
 
+        // change known mobile urls to desktop urls
+        public static string DemobilizeUrl(string url)
+        {
+            var durl = url;
+            if(durl.IndexOf("//mobile.twitter.com/", StringComparison.OrdinalIgnoreCase) > 0)
+            {
+                durl = durl.Replace("//mobile.twitter.com", "//twitter.com");
+            }
+            return durl;
+        }
+
         // strip the protocol if there is one
         public static string SanitizeUrl(string url)
         {

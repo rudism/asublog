@@ -42,7 +42,8 @@ namespace Asublog.Plugins
                     {
                         var ogfield = og.Groups["field"].Value;
                         var ogcontent = og.Groups["content"].Value;
-                        ogdata.Add(ogfield, ogcontent);
+                        if(!ogdata.ContainsKey(ogfield))
+                            ogdata.Add(ogfield, ogcontent);
                     }
 
                     Log.Debug("Extracted tweet data", ogdata);

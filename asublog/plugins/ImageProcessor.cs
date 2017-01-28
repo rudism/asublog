@@ -79,7 +79,7 @@ namespace Asublog.Plugins
             var urls = PostUtils.UrlRegex.Matches(post.Content);
             foreach(Match murl in urls)
             {
-                var url = PostUtils.NormalizeUrl(murl.Value);
+                var url = PostUtils.DemobilizeUrl(PostUtils.NormalizeUrl(murl.Value));
 
                 var cachedImgUrl = App.CacheGet(url);
                 if(cachedImgUrl != null)
