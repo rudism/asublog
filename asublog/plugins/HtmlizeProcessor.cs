@@ -20,7 +20,7 @@ namespace Asublog.Plugins
             var linked = new List<string>();
             foreach(Match match in urls)
             {
-                var url = PostUtils.NormalizeUrl(match.Value);
+                var url = PostUtils.DemobilizeUrl(PostUtils.NormalizeUrl(match.Value));
                 if(!linked.Contains(url))
                 {
                     var noproto = PostUtils.SanitizeUrl(match.Value);
