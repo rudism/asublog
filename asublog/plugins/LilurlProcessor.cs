@@ -19,10 +19,6 @@ namespace Asublog.Plugins
             new Regex(@"<p class=""success"">[^<]+<a href=""(?<lilurl>[^""]+)""",
             RegexOptions.Compiled);
 
-        private static readonly Regex _hasproto =
-            new Regex(@"^https?://",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         public LilurlProcessor() : base("lilurlProcessor", "0.5") { }
 
         private string Process(string content)
@@ -32,11 +28,7 @@ namespace Asublog.Plugins
             var urls = PostUtils.UrlRegex.Matches(content);
             foreach(Match match in urls)
             {
-                var url = match.Value;
-                if(!_hasproto.IsMatch(url))
-                {
-                    url = string.Format("http://{0}", url);
-                }
+                var url = PostUtils.DemobilizeUrl(PostUtils.NormalizeUrl(match.Value));
 
                 var newurl = App.CacheGet(url);
                 if(string.IsNullOrEmpty(newurl))
