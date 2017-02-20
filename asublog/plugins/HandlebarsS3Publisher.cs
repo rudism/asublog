@@ -98,6 +98,7 @@ namespace Asublog.Plugins
         private string _assetPath;
         private Func<object, string> _index;
         private Func<object, string> _post;
+        private Func<object, string> _feed;
         private int _postsPerPage;
         private S3Util _client;
         private string _bucket;
@@ -128,6 +129,13 @@ namespace Asublog.Plugins
                     }
                 }
                 writer.WriteSafeString(date);
+            });
+
+            Handlebars.RegisterHelper("xml_created",
+            (writer, context, parameters) =>
+            {
+                var date = (DateTime) context.Created;
+                writer.WriteSafeString(date.ToString("o"));
             });
 
             Handlebars.RegisterHelper("encode",
@@ -176,6 +184,16 @@ namespace Asublog.Plugins
                 Log.Info("Post template not found, post pages will not be generated.");
             }
 
+            var feed = Path.Combine(themePath, "feed.hbs");
+            if(File.Exists(feed))
+            {
+                _feed = Handlebars.Compile(File.ReadAllText(feed));
+            }
+            else
+            {
+                Log.Info("Feed template not found, rss feed will not be generated.");
+            }
+
             _client = new S3Util(Config["awsKey"], Config["awsSecret"], Config["awsRegion"]) { Log = Log };
         }
 
@@ -188,6 +206,15 @@ namespace Asublog.Plugins
             Log.Debug(string.Format("Rendered index {0}", fname));
             return _client.UploadContent(_bucket, fname, content)
                 ? string.Format("/{0}", fname)
+                : null;
+        }
+
+        private string SaveFeed(HandlebarsPageData data)
+        {
+            var content = _feed(data);
+            Log.Debug("Rendered feed.xml");
+            return _client.UploadContent(_bucket, "feed.xml", content)
+                ? "/feed.xml"
                 : null;
         }
 
@@ -297,6 +324,8 @@ namespace Asublog.Plugins
                 {
                     data.Posts = pagePosts.ToArray();
                     invalidations.Add(SaveIndex(data));
+                    if(data.PageNum == 0)
+                        invalidations.Add(SaveFeed(data));
                     data.PageNum += 1;
                     pagePosts.Clear();
                 }
@@ -305,6 +334,8 @@ namespace Asublog.Plugins
             {
                 data.Posts = pagePosts.ToArray();
                 invalidations.Add(SaveIndex(data));
+                if(data.PageNum == 0)
+                    invalidations.Add(SaveFeed(data));
             }
 
             foreach(var hashtag in hashtags.Keys)

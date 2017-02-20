@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+
+<channel>
+  <title>{{encode SiteName}}</title>
+  <description>{{encode SiteDescription}}</description>
+  <link>{{SiteUrl}}</link>
+  <atom:link href="{{SiteUrl}}/feed.xml" rel="self" type="application/rss+xml" />
+
+  {{#each Posts}}
+  <item>
+    <title>{{tz_created}}</title>
+    <link>{{../SiteUrl}}/post-{{Id}}.html</link>
+    <guid isPermaLink="true">{{../SiteUrl}}/post-{{Id}}.html</guid>
+    <pubDate>{{xml_created}}</pubDate>
+    <description>
+      {{#if HasImage}}
+      &lt;img src=&quot;{{Image.Content}}&quot;/&gt;
+      {{/if}}
+      {{#if HasTweet}}
+      &lt;blockquote&gt;{{encode Tweet.Content}}&lt;/blockquote&gt;
+      {{/if}}
+      {{encode Content}}
+    </description>
+  </item>
+  {{/each}}
+</channel>
+
+</rss>
