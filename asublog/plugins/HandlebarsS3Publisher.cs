@@ -265,7 +265,7 @@ namespace Asublog.Plugins
                 if(!hashtags[hashtag].Contains(post))
                     hashtags[hashtag].Add(post);
 
-                post.Content = post.Content.Replace(string.Format("#{0}", match.Value), string.Format("<a href='/{0}.html'>#{1}</a>", hashtag, match.Value));
+                post.Content = post.Content.Replace(string.Format("#{0}", match.Value), string.Format("<a href='{0}/{1}.html'>#{2}</a>", Config["siteUrl"], hashtag, match.Value));
             }
         }
 
